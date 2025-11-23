@@ -2,39 +2,34 @@
   {
     "Id": "strategy",
     "Name": "Strategy Pattern",
-    "Summary": "アルゴリズムのファミリーを定義し、それぞれをカプセル化して相互に交換可能にするパターン。",
+    "Summary": "アルゴリズムのファミリーを定義し、カプセル化して相互交換可能にするパターン。Open/Closed原則の実現に不可欠。",
     "Category": "Behavioral",
-    "Difficulty": "Beginner",
+    "Difficulty": "Intermediate",
     "IsModern": true,
     "IsAntiPattern": false,
-    "ModernRelevance": "C#ではデリゲートやラムダ式、Func/Actionを活用することで、クラスを作らずとも軽量に実装可能です。DI（依存性注入）と組み合わせることで、非常に強力かつ柔軟な設計が可能になります。",
+    "ModernRelevance": "現代のC#開発では、DI（依存性注入）と組み合わせることで真価を発揮します。`IEnumerable<IStrategy>` をコンストラクタで受け取り、実行時に適切な戦略を選択する「Strategy Provider」パターンが一般的です。また、単純な場合は `Func<T>` や `Action<T>` で代用されることもあります。",
     "Sections": [
       {
-        "Title": "イントロダクション：なぜStrategyが必要なのか？",
-        "Content": "あなたはRPGゲームを作っています。勇者が剣で攻撃するとき、魔法で攻撃するとき、素手で殴るとき...それぞれのダメージ計算ロジックを `Hero` クラスの `Attack` メソッドの中に `if-else` や `switch` で詰め込んでいませんか？\n\n```csharp\n// 悪い例：変更に弱いコード\npublic void Attack(string type)\n{\n    if (type == \"Sword\") { /* ... */ }\n    else if (type == \"Magic\") { /* ... */ }\n}\n```\n\nこれでは新しい攻撃方法が増えるたびに `Hero` クラスを修正しなければなりません。**「変更する箇所は最小限に、拡張にはオープンに（Open/Closed Principle）」**。これを実現するのが Strategy パターンです。",
+        "Title": "イントロダクション：条件分岐の排除",
+        "Content": "ビジネスロジックの中で `if (type == A) ... else if (type == B) ...` という分岐が頻出する場合、それはStrategyパターンの適用シグナルです。\n\n新しいタイプ `C` が追加されるたびに既存のクラスを修正するのは、バグの温床です（Open/Closed Principle違反）。Strategyパターンは、この分岐をポリモーフィズムによって解決します。",
         "ImagePath": ""
       },
       {
-        "Title": "Strategyパターンの構造",
-        "Content": "Strategyパターンは、**「変わる部分」を分離してインターフェース化**します。今回の例で言えば、「ダメージ計算ロジック」が変わる部分です。\n\n1. **Strategy (戦略)**: インターフェース。共通のメソッド（`CalculateDamage`など）を定義。\n2. **ConcreteStrategy (具体的な戦略)**: インターフェースの実装。剣の計算、魔法の計算など。\n3. **Context (文脈)**: Strategyを利用する側。`Hero`クラス。",
-        "ImagePath": ""
-      },
-      {
-        "Title": "モダンなC#での実装例",
-        "Content": "従来のクラスベースの実装に加え、C#では関数型のアプローチも可能です。ここでは、DIコンテナを意識した、TestableでCleanな実装を見てみましょう。",
+        "Title": "実践的実装：DIとStrategyの融合",
+        "Content": "単にインターフェースを作るだけでなく、DIコンテナを活用して戦略を管理するのが現代的な手法です。",
         "CodeSample": {
           "Language": "csharp",
-          "Code": "public interface IAttackStrategy\n{\n    int CalculateDamage(int baseAttack);\n}\n\npublic class SwordStrategy : IAttackStrategy\n{\n    public int CalculateDamage(int baseAttack) => baseAttack + 10;\n}\n\npublic class MagicStrategy : IAttackStrategy\n{\n    public int CalculateDamage(int baseAttack) => baseAttack * 2;\n}\n\n// Context\npublic class Hero\n{\n    private IAttackStrategy _strategy;\n\n    public Hero(IAttackStrategy strategy)\n    {\n        _strategy = strategy;\n    }\n\n    public void SetStrategy(IAttackStrategy strategy)\n    {\n        _strategy = strategy;\n    }\n\n    public void Attack()\n    {\n        int damage = _strategy.CalculateDamage(10);\n        Console.WriteLine($\"Dealt {damage} damage!\");\n    }\n}",
-          "Description": "インターフェースを利用することで、Heroクラスは具体的な計算ロジックを知る必要がなくなりました。"
+          "Code": "public interface IDiscountStrategy\n{\n    bool CanApply(Order order);\n    decimal ApplyDiscount(decimal total);\n}\n\n// 複数の戦略を定義\npublic class HolidayDiscount : IDiscountStrategy { ... }\npublic class PremiumMemberDiscount : IDiscountStrategy { ... }\n\n// Contextクラス\npublic class OrderService\n{\n    private readonly IEnumerable<IDiscountStrategy> _strategies;\n\n    // DIコンテナが登録されている全ての戦略を注入してくれる\n    public OrderService(IEnumerable<IDiscountStrategy> strategies)\n    {\n        _strategies = strategies;\n    }\n\n    public decimal CalculateTotal(Order order)\n    {\n        var total = order.Amount;\n        // 適用可能な最初の戦略、あるいは全ての戦略を適用するなど柔軟に制御可能\n        foreach (var strategy in _strategies.Where(s => s.CanApply(order)))\n        {\n            total = strategy.ApplyDiscount(total);\n        }\n        return total;\n    }\n}",
+          "Description": "この設計なら、新しい割引ルール（戦略）を追加する際、既存の `OrderService` コードを一切変更する必要がありません。単に新しいクラスを作成し、DIに登録するだけです。"
         }
       },
       {
-        "Title": "実践：ラムダ式による軽量化",
-        "Content": "単純なロジックであれば、わざわざクラスを作る必要はありません。`Func` を使ってみましょう。",
+        "Title": "関数型アプローチ：軽量なStrategy",
+        "Content": "クラス定義が重すぎる場合は、デリゲートを活用します。",
         "CodeSample": {
           "Language": "csharp",
-          "Code": "public class HeroSimple\n{\n    public Func<int, int> DamageCalculation { get; set; }\n\n    public void Attack(int baseAttack)\n    {\n        int damage = DamageCalculation(baseAttack);\n        Console.WriteLine($\"Dealt {damage} damage!\");\n    }\n}\n\n// Usage\nvar hero = new HeroSimple();\nhero.DamageCalculation = (baseAtk) => baseAtk + 10; // Sword\nhero.Attack(10);\n\nhero.DamageCalculation = (baseAtk) => baseAtk * 2; // Magic\nhero.Attack(10);",
-          "Description": "C#の強力な機能を使えば、デザインパターンはよりシンプルに表現できます。"
+          "Code": "public void ProcessData(List<int> data, Func<int, bool> filterStrategy)\n{\n    foreach (var item in data.Where(filterStrategy))\n    {\n        Console.WriteLine(item);\n    }\n}\n\n// Usage\nProcessData(list, x => x > 10); // 10より大きい\nProcessData(list, x => x % 2 == 0); // 偶数",
+          "Description": "C#のLINQ自体が、実はStrategyパターンの巨大な適用例と言えます（`Where` や `Select` に渡すラムダ式が戦略です）。"
         }
       }
     ]
@@ -129,25 +124,43 @@
   {
     "Id": "command",
     "Name": "Command Pattern",
-    "Summary": "要求（リクエスト）をオブジェクトとしてカプセル化するパターン。",
+    "Summary": "要求をオブジェクトとしてカプセル化し、パラメータ化、キューイング、ログ記録、そして操作の取り消し（Undo）を可能にするパターン。",
     "Category": "Behavioral",
-    "Difficulty": "Intermediate",
+    "Difficulty": "Advanced",
     "IsModern": true,
     "IsAntiPattern": false,
-    "ModernRelevance": "WPFやMAUIなどのXAML系フレームワークでは、MVVMパターンの `ICommand` として中心的な役割を果たしています。UIのイベントハンドラにロジックを書くのを避けるために必須です。",
+    "ModernRelevance": "WPF/MAUIのMVVMにおける`ICommand`バインディングの基礎です。さらに、クラウドネイティブなシステム設計においては、CQRS（Command Query Responsibility Segregation）アーキテクチャの中核として、書き込み操作（Command）と読み取り操作（Query）を分離するために不可欠な概念となっています。",
     "Sections": [
       {
-        "Title": "イントロダクション：注文票",
-        "Content": "レストランで注文するとき、あなたはシェフに直接「肉を焼いて」とは言いません。ウェイターに注文を伝えます。ウェイターは注文を「注文票（Command）」としてキッチンに渡します。\n\nこれにより、注文の履歴を残したり、キャンセルしたり、後で実行したりすることが可能になります。",
+        "Title": "本質：メソッド呼び出しのオブジェクト化",
+        "Content": "Commandパターンの本質は、「処理の依頼（Invocation）」を「処理の実体（Execution）」から切り離すことにあります。\n\n通常、`button.Click` イベントハンドラに直接ロジックを書くと、そのロジックはボタンと強く結合します。Commandパターンでは、ロジックを独立したクラス（またはデリゲート）にカプセル化します。\n\nこれにより、以下の「スーパーパワー」が得られます：\n1. **Undo/Redo**: 操作をスタックに積むことで、逆操作を実行可能にする。\n2. **マクロ記録**: 一連の操作をリストとして保存し、再生する。\n3. **トランザクション**: 複数の操作を不可分な単位として扱う。\n4. **非同期実行**: コマンドをキューに入れ、バックグラウンドワーカーに処理させる。",
         "ImagePath": ""
       },
       {
-        "Title": "WPFでの活用",
-        "Content": "WPFでは `RelayCommand` や `DelegateCommand` がよく使われます。",
+        "Title": "WPF/MVVMにおける実践的実装",
+        "Content": "WPFでは `ICommand` インターフェースが標準装備されていますが、素のまま実装するのは冗長です。実務では `RelayCommand<T>` や `AsyncRelayCommand` を基盤とします。\n\n特に重要なのは `CanExecuteChanged` の制御です。WPFの `CommandManager` と連携させることで、UIの有効/無効状態を自動的に同期させることができます。",
         "CodeSample": {
           "Language": "csharp",
-          "Code": "public class SaveCommand : ICommand\n{\n    private readonly Action _execute;\n    private readonly Func<bool> _canExecute;\n\n    public SaveCommand(Action execute, Func<bool> canExecute)\n    {\n        _execute = execute;\n        _canExecute = canExecute;\n    }\n\n    public bool CanExecute(object parameter) => _canExecute();\n\n    public void Execute(object parameter) => _execute();\n    \n    public event EventHandler CanExecuteChanged;\n}",
-          "Description": "ボタンのClickイベントに直接コードを書くのではなく、Commandをバインドすることでテスト容易性が向上します。"
+          "Code": "public class RelayCommand<T> : ICommand\n{\n    private readonly Action<T> _execute;\n    private readonly Predicate<T> _canExecute;\n\n    public RelayCommand(Action<T> execute, Predicate<T> canExecute = null)\n    {\n        _execute = execute ?? throw new ArgumentNullException(nameof(execute));\n        _canExecute = canExecute;\n    }\n\n    public event EventHandler CanExecuteChanged\n    {\n        add { CommandManager.RequerySuggested += value; }\n        remove { CommandManager.RequerySuggested -= value; }\n    }\n\n    public bool CanExecute(object parameter) => _canExecute == null || _canExecute((T)parameter);\n\n    public void Execute(object parameter) => _execute((T)parameter);\n}",
+          "Description": "CommandManager.RequerySuggestedを利用することで、フォーカス移動や入力変更時に自動的にCanExecuteが再評価され、ボタンの活性/非活性が即座に反映されます。"
+        }
+      },
+      {
+        "Title": "WinFormsにおけるCommandパターンの適用",
+        "Content": "WinFormsにはWPFのようなバインディング機構はありませんが、Commandパターンを適用することで「UIとロジックの分離」という恩恵を受けられます。\n\nボタンとコマンドを紐付ける `Binder` クラスを作成し、`Application.Idle` イベントを利用して `CanExecute` の状態を監視・反映させる手法が実践的です。",
+        "CodeSample": {
+          "Language": "csharp",
+          "Code": "// WinForms向けの簡易バインダー\npublic class CommandBinder\n{\n    public void Bind(Button button, ICommand command)\n    {\n        // クリック時の実行\n        button.Click += (s, e) => command.Execute(null);\n\n        // アイドル時にCanExecuteをチェックしてEnabledを更新\n        EventHandler handler = (s, e) => \n        {\n            button.Enabled = command.CanExecute(null);\n        };\n        \n        Application.Idle += handler;\n        \n        // メモリリーク防止のため、Dispose等で解除する仕組みが必要ですが簡略化しています\n        button.Disposed += (s, e) => Application.Idle -= handler;\n    }\n}",
+          "Description": "これにより、WinFormsでも「ロジックの状態（CanExecute）」に基づいてUIの表示制御を自動化できます。スパゲッティコード化したイベントハンドラを一掃できます。"
+        }
+      },
+      {
+        "Title": "高度な応用：Undo/Redoシステムの実装",
+        "Content": "Commandパターンの真骨頂はUndo/Redoです。これを実現するには、`Execute` の逆を行う `UnExecute` を定義する必要があります。",
+        "CodeSample": {
+          "Language": "csharp",
+          "Code": "public interface IUndoableCommand : ICommand\n{\n    void UnExecute();\n}\n\npublic class CommandManager\n{\n    private readonly Stack<IUndoableCommand> _undoStack = new();\n    private readonly Stack<IUndoableCommand> _redoStack = new();\n\n    public void Execute(IUndoableCommand command)\n    {\n        command.Execute(null);\n        _undoStack.Push(command);\n        _redoStack.Clear(); // 新しい操作をしたらRedo履歴は消す\n    }\n\n    public void Undo()\n    {\n        if (_undoStack.Count == 0) return;\n        var cmd = _undoStack.Pop();\n        cmd.UnExecute();\n        _redoStack.Push(cmd);\n    }\n\n    public void Redo()\n    {\n        if (_redoStack.Count == 0) return;\n        var cmd = _redoStack.Pop();\n        cmd.Execute(null);\n        _undoStack.Push(cmd);\n    }\n}",
+          "Description": "テキストエディタやグラフィックソフトのような「元に戻す」機能も、この設計なら驚くほどシンプルに実装できます。"
         }
       }
     ]
@@ -155,25 +168,34 @@
   {
     "Id": "state",
     "Name": "State Pattern",
-    "Summary": "オブジェクトの内部状態が変化したときに、その振る舞いを変えるパターン。",
+    "Summary": "オブジェクトの内部状態に応じて振る舞いを変更するパターン。状態特有のロジックをクラスに分離し、巨大な条件分岐を排除する。",
     "Category": "Behavioral",
-    "Difficulty": "Intermediate",
+    "Difficulty": "Advanced",
     "IsModern": true,
     "IsAntiPattern": false,
-    "ModernRelevance": "複雑なステートマシンを実装する場合に非常に有効です。`switch` 文の肥大化を防ぎ、状態ごとのロジックを凝集させることができます。ゲーム開発やワークフローエンジンなどで頻繁に使われます。",
+    "ModernRelevance": "ゲーム開発（キャラクターのAI）、通信プロトコル（TCP接続状態）、ワークフローエンジンなどで必須の知識です。現代のC#では、クラスによる実装だけでなく、`switch` 式と `record` を組み合わせた関数型アプローチ（Statelessライブラリ等）も人気があります。",
     "Sections": [
       {
-        "Title": "イントロダクション：状態遷移",
-        "Content": "例えば「ドキュメント」の状態を考えます。「下書き」「レビュー中」「公開済み」。\n「公開する」というメソッドの動作は、現在の状態によって異なります。\n\n- 下書き → レビュー中へ遷移\n- レビュー中 → 公開済みへ遷移\n- 公開済み → 何もしない（またはエラー）\n\nこれを `if (state == Draft)` のように書くと、コードはすぐにスパゲッティになります。",
+        "Title": "本質：ポリモーフィズムによる分岐の排除",
+        "Content": "「状態」を持つオブジェクトのメソッドは、しばしば巨大な `switch` 文や `if-else` の塊になります。\n\n```csharp\npublic void Request() {\n    if (state == Draft) { ... }\n    else if (state == Review) { ... }\n    else if (state == Published) { ... }\n}\n```\n\nStateパターンは、この「状態」をクラスとして切り出し、**委譲**によって振る舞いを切り替えます。これにより、新しい状態を追加する際に既存のコード（Context）を修正する必要がなくなります。",
         "ImagePath": ""
       },
       {
-        "Title": "実装例",
-        "Content": "状態をクラスとして表現し、Context（文脈）が現在の状態クラスを保持します。",
+        "Title": "実践的実装：ライフサイクル管理 (Enter/Exit)",
+        "Content": "実務レベルのStateパターンでは、単にメソッドを呼ぶだけでなく、状態遷移時の「初期化（Enter）」と「終了処理（Exit）」が重要になります。",
         "CodeSample": {
           "Language": "csharp",
-          "Code": "public abstract class State\n{\n    public abstract void Handle(Context context);\n}\n\npublic class DraftState : State\n{\n    public override void Handle(Context context)\n    {\n        Console.WriteLine(\"Review requested.\");\n        context.State = new ReviewState();\n    }\n}\n\npublic class Context\n{\n    public State State { get; set; }\n    public void Request() => State.Handle(this);\n}",
-          "Description": "新しい状態を追加する場合でも、既存のコードへの影響を最小限に抑えられます。"
+          "Code": "public abstract class State\n{\n    public virtual void Enter(Context context) { } // 状態に入った時\n    public virtual void Exit(Context context) { }  // 状態から出る時\n    public abstract void Handle(Context context);\n}\n\npublic class Context\n{\n    private State _currentState;\n    public Context(State initialState)\n    {\n        TransitionTo(initialState);\n    }\n\n    public void TransitionTo(State newState)\n    {\n        _currentState?.Exit(this);\n        _currentState = newState;\n        Console.WriteLine($\"Transitioned to {newState.GetType().Name}\");\n        _currentState.Enter(this);\n    }\n\n    public void Request() => _currentState.Handle(this);\n}",
+          "Description": "この `TransitionTo` メソッドのように、遷移のロジックを一箇所に集約することで、ログ出力やバリデーション、リソースのクリーンアップを一貫して行えます。"
+        }
+      },
+      {
+        "Title": "モダンC#：Switch式による軽量FSM",
+        "Content": "状態ごとの振る舞いがそれほど複雑でない場合、クラスを量産するのはオーバーエンジニアリングです。C# 8.0以降の `switch` 式を使うと、宣言的に状態遷移を記述できます。",
+        "CodeSample": {
+          "Language": "csharp",
+          "Code": "enum State { Idle, Running, Paused }\nenum Command { Start, Pause, Stop }\n\nState Transition(State current, Command command) => (current, command) switch\n{\n    (State.Idle, Command.Start) => State.Running,\n    (State.Running, Command.Pause) => State.Paused,\n    (State.Paused, Command.Start) => State.Running,\n    (State.Running, Command.Stop) => State.Idle,\n    _ => throw new InvalidOperationException(\"Invalid transition\")\n};\n\n// Usage\nvar newState = Transition(State.Idle, Command.Start); // Running",
+          "Description": "「振る舞い（メソッド）」が主役ならクラスベースのStateパターン、「遷移（データ）」が主役ならこの関数型アプローチが適しています。"
         }
       }
     ]

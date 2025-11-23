@@ -19,12 +19,23 @@ namespace DesignPatternMaster.UI
             Log("App constructor called");
         }
 
-        protected override void OnStartup(StartupEventArgs e)
+        protected override async void OnStartup(StartupEventArgs e)
         {
             try
             {
-                Console.WriteLine("OnStartup called");
                 Log("OnStartup called");
+
+                // Prevent automatic shutdown when Splash Screen closes
+                ShutdownMode = ShutdownMode.OnExplicitShutdown;
+
+                // Show Splash Screen
+                var splashScreen = new DesignPatternMaster.UI.Views.SplashScreen();
+                splashScreen.Show();
+
+                // Wait for 1 second
+                await Task.Delay(1000);
+
+                splashScreen.Close();
                 
                 // Build DI container
                 var services = new ServiceCollection();
@@ -50,18 +61,11 @@ namespace DesignPatternMaster.UI
                 services.AddTransient<SettingsPage>();
                 
                 _serviceProvider = services.BuildServiceProvider();
-                Console.WriteLine("Service provider built");
                 Log("Service provider built");
                 
                 // Create and show main window (use the Views.MainWindow)
                 var mainWindow = _serviceProvider.GetRequiredService<Views.MainWindow>();
-                Console.WriteLine("MainWindow retrieved from DI");
                 Log("MainWindow retrieved from DI");
-                try
-                {
-                    Log($"MainWindow type: {mainWindow.GetType().FullName}; assembly: {mainWindow.GetType().Assembly.FullName}");
-                }
-                catch { }
                 
                 // ensure any UI thread unhandled exceptions are surfaced
                 DispatcherUnhandledException += (sender, args) =>
@@ -71,16 +75,18 @@ namespace DesignPatternMaster.UI
                     args.Handled = true;
                 };
 
+                // Set as main window and restore shutdown mode
+                Application.Current.MainWindow = mainWindow;
+                ShutdownMode = ShutdownMode.OnMainWindowClose;
+                
                 mainWindow.Show();
-                Console.WriteLine("MainWindow.Show() called");
                 Log("MainWindow.Show() called");
                 
                 base.OnStartup(e);
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"ERROR in OnStartup: {ex.Message}");
-                Console.WriteLine($"Stack trace: {ex.StackTrace}");
+                Log($"ERROR in OnStartup: {ex.Message}");
                 MessageBox.Show($"Error during startup: {ex.Message}\n\n{ex.StackTrace}", 
                     "Startup Error", 
                     MessageBoxButton.OK, 

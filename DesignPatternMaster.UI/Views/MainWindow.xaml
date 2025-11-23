@@ -10,7 +10,8 @@
         WindowStartupLocation="CenterScreen"
         WindowStyle="None"
         AllowsTransparency="True"
-        Background="Transparent">
+        Background="Transparent"
+        Icon="/Assets/app_icon.png">
 
     <WindowChrome.WindowChrome>
         <WindowChrome CaptionHeight="32" 

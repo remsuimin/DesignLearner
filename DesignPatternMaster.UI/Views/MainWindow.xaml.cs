@@ -10,25 +10,34 @@ namespace DesignPatternMaster.UI.Views
     {
         public MainWindow(MainWindowViewModel viewModel)
         {
+            try
+            {
                 System.Diagnostics.Debug.WriteLine("Views.MainWindow constructor start");
-            DataContext = viewModel;
-            InitializeComponent();
-            
+                DataContext = viewModel;
+                InitializeComponent();
+                
                 System.Diagnostics.Debug.WriteLine("MainWindow initialized");
-                Console.WriteLine("MainWindow initialized");
                 System.Diagnostics.Debug.WriteLine("Views.MainWindow initialized");
             
-            // Initial navigation to Dashboard
-            Loaded += (s, e) => System.Diagnostics.Debug.WriteLine("Views.MainWindow Loaded");
+                // Initial navigation to Dashboard - moved to Loaded event
+                Loaded += (s, e) =>
+                {
+                    System.Diagnostics.Debug.WriteLine("Views.MainWindow Loaded");
+                    NavigateToDashboard();
+                };
 
-            Closing += (s, e) => System.Diagnostics.Debug.WriteLine("Views.MainWindow Closing");
+                Closing += (s, e) => System.Diagnostics.Debug.WriteLine("Views.MainWindow Closing");
 
-            Closed += (s, e) => System.Diagnostics.Debug.WriteLine("Views.MainWindow Closed");
+                Closed += (s, e) => System.Diagnostics.Debug.WriteLine("Views.MainWindow Closed");
 
-            NavigateToDashboard();
-            System.Diagnostics.Debug.WriteLine("NavigateToDashboard() called");
-
-            StateChanged += MainWindow_StateChanged;
+                StateChanged += MainWindow_StateChanged;
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"ERROR in MainWindow constructor: {ex.Message}");
+                MessageBox.Show($"Error initializing MainWindow: {ex.Message}\n\n{ex.StackTrace}", "Initialization Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                throw;
+            }
         }
 
         private void MainWindow_StateChanged(object? sender, EventArgs e)

@@ -1,0 +1,363 @@
+[
+  {
+    "Id": "strategy",
+    "Name": "Strategy Pattern",
+    "Summary": "アルゴリズムのファミリーを定義し、それぞれをカプセル化して相互に交換可能にするパターン。",
+    "Category": "Behavioral",
+    "Difficulty": "Beginner",
+    "IsModern": true,
+    "IsAntiPattern": false,
+    "ModernRelevance": "C#ではデリゲートやラムダ式、Func/Actionを活用することで、クラスを作らずとも軽量に実装可能です。DI（依存性注入）と組み合わせることで、非常に強力かつ柔軟な設計が可能になります。",
+    "Sections": [
+      {
+        "Title": "イントロダクション：なぜStrategyが必要なのか？",
+        "Content": "あなたはRPGゲームを作っています。勇者が剣で攻撃するとき、魔法で攻撃するとき、素手で殴るとき...それぞれのダメージ計算ロジックを `Hero` クラスの `Attack` メソッドの中に `if-else` や `switch` で詰め込んでいませんか？\n\n```csharp\n// 悪い例：変更に弱いコード\npublic void Attack(string type)\n{\n    if (type == \"Sword\") { /* ... */ }\n    else if (type == \"Magic\") { /* ... */ }\n}\n```\n\nこれでは新しい攻撃方法が増えるたびに `Hero` クラスを修正しなければなりません。**「変更する箇所は最小限に、拡張にはオープンに（Open/Closed Principle）」**。これを実現するのが Strategy パターンです。",
+        "ImagePath": ""
+      },
+      {
+        "Title": "Strategyパターンの構造",
+        "Content": "Strategyパターンは、**「変わる部分」を分離してインターフェース化**します。今回の例で言えば、「ダメージ計算ロジック」が変わる部分です。\n\n1. **Strategy (戦略)**: インターフェース。共通のメソッド（`CalculateDamage`など）を定義。\n2. **ConcreteStrategy (具体的な戦略)**: インターフェースの実装。剣の計算、魔法の計算など。\n3. **Context (文脈)**: Strategyを利用する側。`Hero`クラス。",
+        "ImagePath": ""
+      },
+      {
+        "Title": "モダンなC#での実装例",
+        "Content": "従来のクラスベースの実装に加え、C#では関数型のアプローチも可能です。ここでは、DIコンテナを意識した、TestableでCleanな実装を見てみましょう。",
+        "CodeSample": {
+          "Language": "csharp",
+          "Code": "public interface IAttackStrategy\n{\n    int CalculateDamage(int baseAttack);\n}\n\npublic class SwordStrategy : IAttackStrategy\n{\n    public int CalculateDamage(int baseAttack) => baseAttack + 10;\n}\n\npublic class MagicStrategy : IAttackStrategy\n{\n    public int CalculateDamage(int baseAttack) => baseAttack * 2;\n}\n\n// Context\npublic class Hero\n{\n    private IAttackStrategy _strategy;\n\n    public Hero(IAttackStrategy strategy)\n    {\n        _strategy = strategy;\n    }\n\n    public void SetStrategy(IAttackStrategy strategy)\n    {\n        _strategy = strategy;\n    }\n\n    public void Attack()\n    {\n        int damage = _strategy.CalculateDamage(10);\n        Console.WriteLine($\"Dealt {damage} damage!\");\n    }\n}",
+          "Description": "インターフェースを利用することで、Heroクラスは具体的な計算ロジックを知る必要がなくなりました。"
+        }
+      },
+      {
+        "Title": "実践：ラムダ式による軽量化",
+        "Content": "単純なロジックであれば、わざわざクラスを作る必要はありません。`Func` を使ってみましょう。",
+        "CodeSample": {
+          "Language": "csharp",
+          "Code": "public class HeroSimple\n{\n    public Func<int, int> DamageCalculation { get; set; }\n\n    public void Attack(int baseAttack)\n    {\n        int damage = DamageCalculation(baseAttack);\n        Console.WriteLine($\"Dealt {damage} damage!\");\n    }\n}\n\n// Usage\nvar hero = new HeroSimple();\nhero.DamageCalculation = (baseAtk) => baseAtk + 10; // Sword\nhero.Attack(10);\n\nhero.DamageCalculation = (baseAtk) => baseAtk * 2; // Magic\nhero.Attack(10);",
+          "Description": "C#の強力な機能を使えば、デザインパターンはよりシンプルに表現できます。"
+        }
+      }
+    ]
+  },
+  {
+    "Id": "observer",
+    "Name": "Observer Pattern",
+    "Summary": "あるオブジェクトの状態が変化したときに、依存するすべてのオブジェクトに自動的に通知するパターン。",
+    "Category": "Behavioral",
+    "Difficulty": "Intermediate",
+    "IsModern": true,
+    "IsAntiPattern": false,
+    "ModernRelevance": "C#には `event` キーワードや `IObservable<T>` / `IObserver<T>` (Reactive Extensions) が標準で備わっているため、自前で実装することは稀です。特にRxは非同期ストリーム処理において極めて強力です。",
+    "Sections": [
+      {
+        "Title": "イントロダクション：通知の仕組み",
+        "Content": "YouTubeのチャンネル登録をイメージしてください。新しい動画がアップロードされたら、登録者全員に通知がいきます。あなたが毎回チャンネルを確認しに行く（ポーリング）必要はありません。\n\nこれがObserverパターンです。**「Publish (発行者)」と「Subscribe (購読者)」の関係**を作ります。",
+        "ImagePath": ""
+      },
+      {
+        "Title": "C# 標準の event を使う",
+        "Content": "C#では、言語機能としてObserverパターンが組み込まれています。それが `event` です。",
+        "CodeSample": {
+          "Language": "csharp",
+          "Code": "public class YouTuber\n{\n    // イベントの定義\n    public event Action<string> VideoUploaded;\n\n    public void Upload(string title)\n    {\n        Console.WriteLine($\"Uploading {title}...\");\n        // 通知の発行\n        VideoUploaded?.Invoke(title);\n    }\n}\n\npublic class Subscriber\n{\n    public string Name { get; set; }\n\n    public void OnVideoUploaded(string title)\n    {\n        Console.WriteLine($\"{Name}: Wow! New video '{title}' is out!\");\n    }\n}",
+          "Description": "eventを使えば、+= 演算子で簡単に購読者を追加できます。"
+        }
+      },
+      {
+        "Title": "Reactive Extensions (Rx) への発展",
+        "Content": "現代のC#開発、特にGUIアプリや非同期処理においては、`event` よりも **Reactive Extensions (Rx)** が好まれます。Rxは「イベントのコレクション」として時間を扱います。\n\n`System.Reactive` パッケージを使うことで、イベントのフィルタリング、合成、遅延などがLINQのように記述できます。",
+        "CodeSample": {
+          "Language": "csharp",
+          "Code": "// Rxのイメージ（擬似コード）\nyoutuber.VideoUploadedStream\n    .Where(title => title.Contains(\"C#\")) // C#の動画だけ通知\n    .Throttle(TimeSpan.FromSeconds(1)) // 連打防止\n    .Subscribe(title => Console.WriteLine($\"Watch: {title}\"));",
+          "Description": "ObserverパターンはRxへと進化し、より宣言的で強力なパラダイムとなりました。"
+        }
+      }
+    ]
+  },
+  {
+    "Id": "factory-method",
+    "Name": "Factory Method Pattern",
+    "Summary": "インスタンス生成のプロセスをサブクラスに委譲し、クラスの結合度を下げるパターン。",
+    "Category": "Creational",
+    "Difficulty": "Beginner",
+    "IsModern": true,
+    "IsAntiPattern": false,
+    "ModernRelevance": "DIコンテナ（Dependency Injection）がファクトリーの役割を担うことが多いため、手動でFactoryクラスを作る機会は減りました。しかし、動的な生成ロジックが必要な場合や、ライブラリ設計においては依然として重要です。",
+    "Sections": [
+      {
+        "Title": "イントロダクション：newの何が悪い？",
+        "Content": "コードの中で `new ConcreteClass()` と書くと、そのクラスに強く依存してしまいます。将来的に `ConcreteClass` を `BetterConcreteClass` に変えたい場合、すべての `new` を書き直さなければなりません。\n\nFactory Methodパターンは、「生成」という行為をメソッドに切り出し、ポリモーフィズムを使って生成するクラスを切り替えられるようにします。",
+        "ImagePath": ""
+      },
+      {
+        "Title": "構造と実装",
+        "Content": "Creator（作成者）クラスが `CreateProduct` という抽象メソッドを持ち、ConcreteCreator（具体的な作成者）がそれを実装して具体的な製品（Product）を返します。",
+        "CodeSample": {
+          "Language": "csharp",
+          "Code": "public abstract class Creator\n{\n    // Factory Method\n    public abstract IProduct FactoryMethod();\n\n    public void Operation()\n    {\n        var product = FactoryMethod();\n        product.DoStuff();\n    }\n}\n\npublic class ConcreteCreatorA : Creator\n{\n    public override IProduct FactoryMethod() => new ConcreteProductA();\n}",
+          "Description": "Creatorクラスは具体的なProductを知りません。知っているのはIProductインターフェースだけです。"
+        }
+      }
+    ]
+  },
+  {
+    "Id": "adapter",
+    "Name": "Adapter Pattern",
+    "Summary": "互換性のないインターフェースを持つクラス同士を接続し、一緒に動作させるパターン。",
+    "Category": "Structural",
+    "Difficulty": "Beginner",
+    "IsModern": true,
+    "IsAntiPattern": false,
+    "ModernRelevance": "非常に一般的です。特にサードパーティ製のライブラリを自分のアプリケーションのインターフェースに合わせてラップする場合や、レガシーコードとの統合によく使われます。",
+    "Sections": [
+      {
+        "Title": "イントロダクション：変換プラグ",
+        "Content": "海外旅行に行ったとき、コンセントの形状が合わなくて困ったことはありませんか？その時に使う「変換プラグ」こそがAdapterパターンです。\n\nプログラムでも、既存のクラス（Adaptee）を新しいインターフェース（Target）として使いたい場合があります。",
+        "ImagePath": ""
+      },
+      {
+        "Title": "実装例",
+        "Content": "継承を使う方法と、委譲（コンポジション）を使う方法がありますが、C#では委譲が推奨されます。",
+        "CodeSample": {
+          "Language": "csharp",
+          "Code": "// 既存のクラス (変更できない)\npublic class OldSystem\n{\n    public void SpecificRequest() => Console.WriteLine(\"Old request\");\n}\n\n// 新しいインターフェース\npublic interface ITarget\n{\n    void Request();\n}\n\n// Adapter\npublic class Adapter : ITarget\n{\n    private readonly OldSystem _oldSystem;\n\n    public Adapter(OldSystem oldSystem)\n    {\n        _oldSystem = oldSystem;\n    }\n\n    public void Request()\n    {\n        // 呼び出しを変換\n        _oldSystem.SpecificRequest();\n    }\n}",
+          "Description": "Adapterクラスが間に入ることで、ClientはOldSystemの実装を知らずに利用できます。"
+        }
+      }
+    ]
+  },
+  {
+    "Id": "command",
+    "Name": "Command Pattern",
+    "Summary": "要求（リクエスト）をオブジェクトとしてカプセル化するパターン。",
+    "Category": "Behavioral",
+    "Difficulty": "Intermediate",
+    "IsModern": true,
+    "IsAntiPattern": false,
+    "ModernRelevance": "WPFやMAUIなどのXAML系フレームワークでは、MVVMパターンの `ICommand` として中心的な役割を果たしています。UIのイベントハンドラにロジックを書くのを避けるために必須です。",
+    "Sections": [
+      {
+        "Title": "イントロダクション：注文票",
+        "Content": "レストランで注文するとき、あなたはシェフに直接「肉を焼いて」とは言いません。ウェイターに注文を伝えます。ウェイターは注文を「注文票（Command）」としてキッチンに渡します。\n\nこれにより、注文の履歴を残したり、キャンセルしたり、後で実行したりすることが可能になります。",
+        "ImagePath": ""
+      },
+      {
+        "Title": "WPFでの活用",
+        "Content": "WPFでは `RelayCommand` や `DelegateCommand` がよく使われます。",
+        "CodeSample": {
+          "Language": "csharp",
+          "Code": "public class SaveCommand : ICommand\n{\n    private readonly Action _execute;\n    private readonly Func<bool> _canExecute;\n\n    public SaveCommand(Action execute, Func<bool> canExecute)\n    {\n        _execute = execute;\n        _canExecute = canExecute;\n    }\n\n    public bool CanExecute(object parameter) => _canExecute();\n\n    public void Execute(object parameter) => _execute();\n    \n    public event EventHandler CanExecuteChanged;\n}",
+          "Description": "ボタンのClickイベントに直接コードを書くのではなく、Commandをバインドすることでテスト容易性が向上します。"
+        }
+      }
+    ]
+  },
+  {
+    "Id": "state",
+    "Name": "State Pattern",
+    "Summary": "オブジェクトの内部状態が変化したときに、その振る舞いを変えるパターン。",
+    "Category": "Behavioral",
+    "Difficulty": "Intermediate",
+    "IsModern": true,
+    "IsAntiPattern": false,
+    "ModernRelevance": "複雑なステートマシンを実装する場合に非常に有効です。`switch` 文の肥大化を防ぎ、状態ごとのロジックを凝集させることができます。ゲーム開発やワークフローエンジンなどで頻繁に使われます。",
+    "Sections": [
+      {
+        "Title": "イントロダクション：状態遷移",
+        "Content": "例えば「ドキュメント」の状態を考えます。「下書き」「レビュー中」「公開済み」。\n「公開する」というメソッドの動作は、現在の状態によって異なります。\n\n- 下書き → レビュー中へ遷移\n- レビュー中 → 公開済みへ遷移\n- 公開済み → 何もしない（またはエラー）\n\nこれを `if (state == Draft)` のように書くと、コードはすぐにスパゲッティになります。",
+        "ImagePath": ""
+      },
+      {
+        "Title": "実装例",
+        "Content": "状態をクラスとして表現し、Context（文脈）が現在の状態クラスを保持します。",
+        "CodeSample": {
+          "Language": "csharp",
+          "Code": "public abstract class State\n{\n    public abstract void Handle(Context context);\n}\n\npublic class DraftState : State\n{\n    public override void Handle(Context context)\n    {\n        Console.WriteLine(\"Review requested.\");\n        context.State = new ReviewState();\n    }\n}\n\npublic class Context\n{\n    public State State { get; set; }\n    public void Request() => State.Handle(this);\n}",
+          "Description": "新しい状態を追加する場合でも、既存のコードへの影響を最小限に抑えられます。"
+        }
+      }
+    ]
+  },
+  {
+    "Id": "template-method",
+    "Name": "Template Method Pattern",
+    "Summary": "処理のアルゴリズムの骨格をスーパークラスで定義し、その一部の具体的な手順をサブクラスで実装するパターン。",
+    "Category": "Behavioral",
+    "Difficulty": "Beginner",
+    "IsModern": true,
+    "IsAntiPattern": false,
+    "ModernRelevance": "フレームワークやライブラリの設計（フックメソッドなど）でよく使われます。ただし、継承を強制するため、Strategyパターンの方が柔軟性が高い場合もあります。",
+    "Sections": [
+      {
+        "Title": "イントロダクション：レシピ",
+        "Content": "料理のレシピを考えてみましょう。「お湯を沸かす」「具材を入れる」「煮込む」という手順はカレーでもシチューでも同じです。「具材」や「味付け」だけが違います。\n\nTemplate Methodパターンは、この「共通の手順」を親クラスに定義し、「違う部分」だけを子クラスに任せます。",
+        "ImagePath": ""
+      },
+      {
+        "Title": "実装例",
+        "Content": "抽象クラスに `TemplateMethod` を定義し、その中で抽象メソッドを呼び出します。",
+        "CodeSample": {
+          "Language": "csharp",
+          "Code": "public abstract class Cooking\n{\n    // Template Method\n    public void Cook()\n    {\n        BoilWater();\n        AddIngredients(); // 抽象メソッド\n        Simmer();\n    }\n\n    protected abstract void AddIngredients();\n    \n    private void BoilWater() => Console.WriteLine(\"Boiling water...\");\n    private void Simmer() => Console.WriteLine(\"Simmering...\");\n}",
+          "Description": "親クラスが処理の流れ（制御）を握っているのが特徴です（ハリウッドの原則：Don't call us, we'll call you）。"
+        }
+      }
+    ]
+  },
+  {
+    "Id": "singleton",
+    "Name": "Singleton Pattern",
+    "Summary": "クラスのインスタンスが1つしか生成されないことを保証するパターン。",
+    "Category": "Creational",
+    "Difficulty": "Beginner",
+    "IsModern": false,
+    "IsAntiPattern": true,
+    "ModernRelevance": "現代の設計、特に単体テストを重視する環境では**アンチパターン**とされることが多いです。グローバルな状態を持ち、依存関係を隠蔽してしまうためです。代わりにDIコンテナの `Singleton` ライフサイクルを使用すべきです。",
+    "Sections": [
+      {
+        "Title": "なぜアンチパターンなのか？",
+        "Content": "かつては便利に使われていたSingletonですが、現在は以下の理由で嫌われています：\n1. **密結合**: 利用する側が具体的なクラス名に依存してしまう。\n2. **テスト困難**: グローバルな状態を持つため、テスト間の干渉が起きやすい。モックに差し替えるのが難しい。\n3. **隠された依存**: コンストラクタを見ても何に依存しているかわからない。",
+        "ImagePath": ""
+      },
+      {
+        "Title": "現代的な解決策：DIコンテナ",
+        "Content": "クラス自体をSingletonにするのではなく、**「使い方がSingleton」**であるようにDIコンテナに管理させます。",
+        "CodeSample": {
+          "Language": "csharp",
+          "Code": "// 悪い例：自前Singleton\npublic class Database\n{\n    public static Database Instance { get; } = new Database();\n    private Database() { }\n}\n\n// 良い例：普通のクラスとして定義し、DIで寿命管理\nservices.AddSingleton<IDatabase, Database>();",
+          "Description": "これにより、テスト時には `IDatabase` のモックを渡すことが容易になります。"
+        }
+      }
+    ]
+  },
+  {
+    "Id": "builder",
+    "Name": "Builder Pattern",
+    "Summary": "複雑なオブジェクトの生成過程を分離し、同じ生成過程で異なる表現形式のオブジェクトを生成できるようにするパターン。",
+    "Category": "Creational",
+    "Difficulty": "Intermediate",
+    "IsModern": true,
+    "IsAntiPattern": false,
+    "ModernRelevance": "Fluent Interface（メソッドチェーン）として非常に広く使われています。StringBuilderやASP.NET Coreの構成（HostBuilder）などが代表例です。",
+    "Sections": [
+      {
+        "Title": "イントロダクション：コンストラクタ地獄",
+        "Content": "引数が10個あるコンストラクタを見たことはありませんか？どれがどのパラメータか分からず、nullを渡すのも面倒です。\n\nBuilderパターンを使えば、必要なパラメータだけを分かりやすいメソッド名で設定し、最後に `Build()` でオブジェクトを生成できます。",
+        "ImagePath": ""
+      },
+      {
+        "Title": "実装例：Fluent Builder",
+        "Content": "自分自身を返すメソッドを定義することで、メソッドチェーンを実現します。",
+        "CodeSample": {
+          "Language": "csharp",
+          "Code": "public class Pizza\n{\n    public string Dough { get; set; }\n    public string Sauce { get; set; }\n    public string Topping { get; set; }\n}\n\npublic class PizzaBuilder\n{\n    private Pizza _pizza = new Pizza();\n\n    public PizzaBuilder WithDough(string dough)\n    {\n        _pizza.Dough = dough;\n        return this;\n    }\n\n    public PizzaBuilder WithSauce(string sauce)\n    {\n        _pizza.Sauce = sauce;\n        return this;\n    }\n\n    public Pizza Build() => _pizza;\n}\n\n// Usage\nvar pizza = new PizzaBuilder()\n    .WithDough(\"Thin\")\n    .WithSauce(\"Tomato\")\n    .Build();",
+          "Description": "読みやすく、パラメータの順序も気にする必要がありません。"
+        }
+      }
+    ]
+  },
+  {
+    "Id": "abstract-factory",
+    "Name": "Abstract Factory Pattern",
+    "Summary": "関連する一連のオブジェクトを生成するためのインターフェースを提供し、具体的なクラスを指定せずに生成できるようにするパターン。",
+    "Category": "Creational",
+    "Difficulty": "Advanced",
+    "IsModern": true,
+    "IsAntiPattern": false,
+    "ModernRelevance": "クロスプラットフォーム開発（UI部品の生成など）や、データベースの切り替えなどで有効です。DIコンテナと組み合わせることで、設定一つでアプリケーション全体の振る舞い（使用するクラス群）を切り替えることができます。",
+    "Sections": [
+      {
+        "Title": "イントロダクション：テーマ切り替え",
+        "Content": "「Windows風のボタンとウィンドウ」「Mac風のボタンとウィンドウ」を作りたいとします。バラバラに生成すると、WindowsのボタンとMacのウィンドウが混ざってしまうかもしれません。\n\nAbstract Factoryは「製品ファミリー」をまとめて生成する工場を定義します。",
+        "ImagePath": ""
+      },
+      {
+        "Title": "実装例",
+        "Content": "工場（Factory）のインターフェースを定義し、具体的な工場（WindowsFactory, MacFactory）がそれを実装します。",
+        "CodeSample": {
+          "Language": "csharp",
+          "Code": "public interface IUIFactory\n{\n    IButton CreateButton();\n    IWindow CreateWindow();\n}\n\npublic class WindowsFactory : IUIFactory\n{\n    public IButton CreateButton() => new WindowsButton();\n    public IWindow CreateWindow() => new WindowsWindow();\n}\n\n// Client\npublic class Application\n{\n    private readonly IUIFactory _factory;\n    public Application(IUIFactory factory)\n    {\n        _factory = factory;\n    }\n    public void Render() \n    {\n        var btn = _factory.CreateButton(); // 何のOSか知らなくて良い\n    }\n}",
+          "Description": "クライアントコードは具体的なOSの実装から完全に切り離されます。"
+        }
+      }
+    ]
+  },
+  {
+    "Id": "decorator",
+    "Name": "Decorator Pattern",
+    "Summary": "オブジェクトに動的に責任（機能）を追加するパターン。継承よりも柔軟な拡張が可能。",
+    "Category": "Structural",
+    "Difficulty": "Intermediate",
+    "IsModern": true,
+    "IsAntiPattern": false,
+    "ModernRelevance": "ASP.NET CoreのMiddlewareパイプラインや、Stream（FileStreamにGZipStreamを被せるなど）の設計はまさにDecoratorです。AOP（アスペクト指向プログラミング）の基礎とも言えます。",
+    "Sections": [
+      {
+        "Title": "イントロダクション：マトリョーシカ",
+        "Content": "「コーヒー」クラスに「ミルク入り」「砂糖入り」「ミルクと砂糖入り」...と継承でクラスを作っていくと、クラス数が爆発します。\n\nDecoratorパターンは、オブジェクトを「ラップ（包む）」することで機能を上乗せします。マトリョーシカのように何重にも包むことができます。",
+        "ImagePath": ""
+      },
+      {
+        "Title": "実装例",
+        "Content": "共通のインターフェースを持ち、コンストラクタで「包む対象」を受け取ります。",
+        "CodeSample": {
+          "Language": "csharp",
+          "Code": "public interface ICoffee\n{\n    int GetCost();\n}\n\npublic class SimpleCoffee : ICoffee\n{\n    public int GetCost() => 100;\n}\n\npublic class MilkDecorator : ICoffee\n{\n    private readonly ICoffee _coffee;\n    public MilkDecorator(ICoffee coffee) => _coffee = coffee;\n\n    public int GetCost() => _coffee.GetCost() + 50;\n}\n\n// Usage\nvar myCoffee = new MilkDecorator(new SimpleCoffee()); // 150円",
+          "Description": "既存のクラスを変更することなく、機能を「装飾」できます。"
+        }
+      }
+    ]
+  },
+  {
+    "Id": "proxy",
+    "Name": "Proxy Pattern",
+    "Summary": "あるオブジェクトへのアクセスを制御するために、その代理（プロキシ）となるオブジェクトを置くパターン。",
+    "Category": "Structural",
+    "Difficulty": "Intermediate",
+    "IsModern": true,
+    "IsAntiPattern": false,
+    "ModernRelevance": "Entity FrameworkのLazy Loading（遅延読み込み）や、WCF/gRPCのクライアントプロキシなど、リモート呼び出しや重い処理の制御に不可欠です。",
+    "Sections": [
+      {
+        "Title": "イントロダクション：代理人",
+        "Content": "社長（重いオブジェクト）に会う前に、秘書（Proxy）が用件を聞きます。簡単な用件なら秘書が答え、重要な用件だけ社長に取り次ぎます。\n\nこれにより、メモリの節約やセキュリティチェックが可能になります。",
+        "ImagePath": ""
+      },
+      {
+        "Title": "実装例：仮想プロキシ（遅延初期化）",
+        "Content": "実際に必要になるまで、重いオブジェクトを生成しません。",
+        "CodeSample": {
+          "Language": "csharp",
+          "Code": "public interface IImage\n{\n    void Display();\n}\n\npublic class RealImage : IImage\n{\n    public RealImage(string filename) => Console.WriteLine($\"Loading {filename}...\");\n    public void Display() => Console.WriteLine(\"Displaying image.\");\n}\n\npublic class ProxyImage : IImage\n{\n    private RealImage _realImage;\n    private string _filename;\n\n    public ProxyImage(string filename) => _filename = filename;\n\n    public void Display()\n    {\n        if (_realImage == null)\n            _realImage = new RealImage(_filename);\n        _realImage.Display();\n    }\n}",
+          "Description": "クライアントはProxyを使っていることに気づきません。"
+        }
+      }
+    ]
+  },
+  {
+    "Id": "facade",
+    "Name": "Facade Pattern",
+    "Summary": "複雑なサブシステムに対するシンプルで統一されたインターフェースを提供するパターン。",
+    "Category": "Structural",
+    "Difficulty": "Beginner",
+    "IsModern": true,
+    "IsAntiPattern": false,
+    "ModernRelevance": "ライブラリやAPIの設計において、「使いやすいAPI」を提供するために重要です。複雑な内部クラス群を隠蔽し、ユーザーにはシンプルなメソッドだけを見せます。",
+    "Sections": [
+      {
+        "Title": "イントロダクション：窓口",
+        "Content": "家を建てるとき、大工、電気屋、配管工...それぞれに個別に指示を出すのは大変です。「現場監督（Facade）」がいれば、監督に「キッチンを作って」と言うだけで済みます。",
+        "ImagePath": ""
+      },
+      {
+        "Title": "実装例",
+        "Content": "複数のクラスのメソッドを組み合わせて、高レベルな機能を提供します。",
+        "CodeSample": {
+          "Language": "csharp",
+          "Code": "// 複雑なサブシステム\nclass Audio { public void On() {} }\nclass Video { public void On() {} }\nclass Lights { public void Dim() {} }\n\n// Facade\npublic class HomeTheaterFacade\n{\n    private Audio _audio = new Audio();\n    private Video _video = new Video();\n    private Lights _lights = new Lights();\n\n    public void WatchMovie()\n    {\n        _lights.Dim();\n        _audio.On();\n        _video.On();\n        Console.WriteLine(\"Movie started!\");\n    }\n}",
+          "Description": "クライアントコードが劇的にシンプルになります。"
+        }
+      }
+    ]
+  }
+]

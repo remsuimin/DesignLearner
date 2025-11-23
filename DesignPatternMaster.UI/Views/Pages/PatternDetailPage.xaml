@@ -1,0 +1,122 @@
+<Page x:Class="DesignPatternMaster.UI.Views.Pages.PatternDetailPage"
+      xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+      xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+      xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+      xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+      xmlns:viewModels="clr-namespace:DesignPatternMaster.UI.ViewModels"
+      xmlns:helpers="clr-namespace:DesignPatternMaster.UI.Helpers"
+      mc:Ignorable="d" 
+      d:DesignHeight="800" d:DesignWidth="800"
+      Title="PatternDetailPage"
+      Background="{StaticResource BackgroundBrush}">
+
+    <ScrollViewer VerticalScrollBarVisibility="Auto" Style="{StaticResource ModernScrollViewer}">
+        <Grid Margin="40,30,40,40" Style="{StaticResource PageEntranceStyle}">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="*"/>
+            </Grid.RowDefinitions>
+
+            <!-- Header -->
+            <StackPanel Grid.Row="0" Margin="0,0,0,30">
+                <TextBlock Text="{Binding SelectedPattern.Name}" 
+                          Style="{StaticResource Heading1}"/>
+                <StackPanel Orientation="Horizontal" Margin="0,10,0,0">
+                    <Border Background="{StaticResource PrimaryBrush}" 
+                            CornerRadius="6" 
+                            Padding="12,6" 
+                            Margin="0,0,10,0">
+                        <TextBlock Text="{Binding SelectedPattern.Category}" 
+                                  Foreground="{StaticResource TextPrimaryBrush}"
+                                  FontSize="13" 
+                                  FontWeight="Medium"/>
+                    </Border>
+                    <Border Background="{StaticResource SurfaceHoverBrush}" 
+                            CornerRadius="6" 
+                            Padding="12,6">
+                        <TextBlock Text="{Binding SelectedPattern.Difficulty}" 
+                                  FontSize="13" 
+                                  Foreground="{StaticResource TextSecondaryBrush}"
+                                  FontWeight="Medium"/>
+                    </Border>
+                </StackPanel>
+            </StackPanel>
+
+            <!-- Modern Relevance Alert -->
+            <Border Grid.Row="1" 
+                    Margin="0,0,0,30" 
+                    Background="{StaticResource SurfaceBrush}" 
+                    BorderBrush="{StaticResource PrimaryBrush}"
+                    BorderThickness="2"
+                    CornerRadius="12" 
+                    Padding="20">
+                <StackPanel>
+                        <StackPanel Orientation="Horizontal" Margin="0,0,0,12">
+                        <TextBlock Text="💡" FontSize="24" Margin="0,0,12,0" Foreground="{StaticResource AccentBrush}"/>
+                        <TextBlock Text="モダンC#での位置づけ" 
+                                  Style="{StaticResource Heading3}" 
+                                  Margin="0"/>
+                    </StackPanel>
+                    <TextBlock Text="{Binding SelectedPattern.ModernRelevance}" 
+                              TextWrapping="Wrap" 
+                              Style="{StaticResource BodyText}"
+                              LineHeight="24"/>
+                </StackPanel>
+            </Border>
+
+            <!-- Sections -->
+            <ItemsControl Grid.Row="2" ItemsSource="{Binding SelectedPattern.Sections}">
+                <ItemsControl.ItemTemplate>
+                    <DataTemplate>
+                        <StackPanel Margin="0,0,0,40">
+                            <TextBlock Text="{Binding Title}" 
+                                      Style="{StaticResource Heading2}"/>
+                            <TextBlock Text="{Binding Content}" 
+                                      TextWrapping="Wrap" 
+                                      Style="{StaticResource BodyText}"
+                                      LineHeight="26" 
+                                      Margin="0,0,0,20"/>
+                            
+                            <!-- Code Sample -->
+                            <Border CornerRadius="12" 
+                                   Background="{StaticResource SurfaceBrush}" 
+                                   BorderBrush="{StaticResource BorderBrush}"
+                                   BorderThickness="1"
+                                   Padding="24"
+                                   Margin="0,10,0,0">
+                                <Border.Style>
+                                    <Style TargetType="Border">
+                                        <Setter Property="Visibility" Value="Visible"/>
+                                        <Style.Triggers>
+                                            <DataTrigger Binding="{Binding CodeSample}" Value="{x:Null}">
+                                                <Setter Property="Visibility" Value="Collapsed"/>
+                                            </DataTrigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </Border.Style>
+                                <StackPanel>
+                                    <TextBlock Text="{Binding CodeSample.Description}" 
+                                              FontStyle="Italic" 
+                                              Margin="0,0,0,12" 
+                                              Style="{StaticResource SecondaryText}"/>
+                                    <RichTextBox helpers:SyntaxHighlighter.Code="{Binding CodeSample.Code}"
+                                                IsReadOnly="True" 
+                                                Background="Transparent" 
+                                                BorderThickness="0"
+                                                Padding="0">
+                                        <RichTextBox.Resources>
+                                            <Style TargetType="{x:Type Paragraph}">
+                                                <Setter Property="Margin" Value="0"/>
+                                            </Style>
+                                        </RichTextBox.Resources>
+                                    </RichTextBox>
+                                </StackPanel>
+                            </Border>
+                        </StackPanel>
+                    </DataTemplate>
+                </ItemsControl.ItemTemplate>
+            </ItemsControl>
+        </Grid>
+    </ScrollViewer>
+</Page>

@@ -64,18 +64,17 @@ namespace DesignPatternMaster.Infrastructure.Tests.Repositories
         }
 
         [Fact]
-        public async Task GetAllPatternsAsync_ShouldReturnEmptyList_WhenFileDoesNotExist()
+        public async Task GetAllPatternsAsync_ShouldThrowFileNotFoundException_WhenFileDoesNotExist()
         {
             // Arrange
             var nonExistentPath = Path.Combine(_testDirectory, "nonexistent.json");
             var repository = new JsonPatternRepository(nonExistentPath);
 
             // Act
-            var result = await repository.GetAllPatternsAsync();
+            var act = async () => await repository.GetAllPatternsAsync();
 
             // Assert
-            result.Should().NotBeNull();
-            result.Should().BeEmpty();
+            await act.Should().ThrowAsync<FileNotFoundException>();
         }
 
         [Fact]
@@ -321,6 +320,22 @@ namespace DesignPatternMaster.Infrastructure.Tests.Repositories
             // Assert
             var pattern = result.First();
             pattern.IconPath.Should().BeNull();
+        }
+
+        [Fact]
+        public async Task GetAllPatternsAsync_ShouldLoadRealPatternsJson()
+        {
+            // Arrange: default path resolution + None-Update-transferred real data.
+            var repository = new JsonPatternRepository();
+
+            // Act
+            var result = await repository.GetAllPatternsAsync();
+
+            // Assert
+            result.Should().NotBeNull();
+            result.Should().NotBeEmpty();
+            result.Select(p => p.Id).Should().Contain("strategy");
+            result.Should().OnlyContain(p => !string.IsNullOrWhiteSpace(p.Id));
         }
     }
 }

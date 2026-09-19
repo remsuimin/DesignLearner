@@ -1,35 +1,40 @@
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
-using System.Collections.ObjectModel;
-using System.Windows.Input;
+using DesignPatternMaster.UI.Services;
+using Microsoft.Extensions.Logging;
 
-namespace DesignPatternMaster.UI.ViewModels
+namespace DesignPatternMaster.UI.ViewModels;
+
+public sealed partial class MainWindowViewModel : ObservableObject
 {
-    public partial class MainWindowViewModel : ObservableObject
+    private readonly INavigationService _navigation;
+    private readonly ILogger<MainWindowViewModel> _logger;
+
+    [ObservableProperty]
+    private string _applicationTitle = "Design Pattern Master";
+
+    public MainWindowViewModel(INavigationService navigation, ILogger<MainWindowViewModel> logger)
     {
-        [ObservableProperty]
-        private string _applicationTitle = "Design Pattern Master";
+        ArgumentNullException.ThrowIfNull(navigation);
+        ArgumentNullException.ThrowIfNull(logger);
+        _navigation = navigation;
+        _logger = logger;
+    }
 
-        public MainWindowViewModel()
+    [RelayCommand]
+    private async Task Navigate(string? pageName)
+    {
+        switch (pageName)
         {
-        }
-
-        [RelayCommand]
-        private void Navigate(string pageName)
-        {
-            // Simple navigation logic for now
-            var mainWindow = System.Windows.Application.Current.MainWindow as Views.MainWindow;
-            if (mainWindow != null)
-            {
-                if (pageName == "Dashboard")
-                {
-                    mainWindow.Navigate(typeof(Views.Pages.DashboardPage));
-                }
-                else if (pageName == "Settings")
-                {
-                    mainWindow.Navigate(typeof(Views.Pages.SettingsPage));
-                }
-            }
+            case "Dashboard":
+                await _navigation.NavigateToDashboardAsync();
+                break;
+            case "Settings":
+                await _navigation.NavigateToSettingsAsync();
+                break;
+            default:
+                _logger.LogWarning("Unknown page requested: {PageName}", pageName);
+                break;
         }
     }
 }

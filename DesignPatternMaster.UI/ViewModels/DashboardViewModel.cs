@@ -1,58 +1,61 @@
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using DesignPatternMaster.Core.Entities;
+using DesignPatternMaster.UI.Services;
 using DesignPatternMaster.UseCases.Queries;
+using Microsoft.Extensions.Logging;
 using System.Collections.ObjectModel;
-using System.Threading.Tasks;
 
+namespace DesignPatternMaster.UI.ViewModels;
 
-
-using CommunityToolkit.Mvvm.Messaging;
-
-namespace DesignPatternMaster.UI.ViewModels
+public sealed partial class DashboardViewModel : ObservableObject
 {
-    public partial class DashboardViewModel : ObservableObject
+    private readonly IGetPatternListQuery _query;
+    private readonly INavigationService _navigation;
+    private readonly ILogger<DashboardViewModel> _logger;
+
+    [ObservableProperty]
+    private ObservableCollection<DesignPattern> _patterns = new();
+
+    public DashboardViewModel(
+        IGetPatternListQuery query,
+        INavigationService navigation,
+        ILogger<DashboardViewModel> logger)
     {
-        private readonly GetPatternListQuery _getPatternListQuery;
+        ArgumentNullException.ThrowIfNull(query);
+        ArgumentNullException.ThrowIfNull(navigation);
+        ArgumentNullException.ThrowIfNull(logger);
+        _query = query;
+        _navigation = navigation;
+        _logger = logger;
+    }
 
-        [ObservableProperty]
-        private ObservableCollection<DesignPattern> _patterns;
-
-        public DashboardViewModel(GetPatternListQuery getPatternListQuery)
+    public async Task LoadDataAsync(CancellationToken cancellationToken = default)
+    {
+        try
         {
-            _getPatternListQuery = getPatternListQuery;
-            Patterns = new ObservableCollection<DesignPattern>();
-        }
-
-        public async Task LoadDataAsync()
-        {
-            var patterns = await _getPatternListQuery.ExecuteAsync();
+            var patterns = await _query.ExecuteAsync(cancellationToken);
             Patterns.Clear();
             foreach (var pattern in patterns)
             {
                 Patterns.Add(pattern);
             }
-            try
-            {
-                System.Diagnostics.Debug.WriteLine($"Dashboard patterns loaded: {Patterns.Count}");
-                System.IO.File.AppendAllText(System.IO.Path.Combine(System.IO.Path.GetTempPath(), "DesignPatternMaster.log"), $"[{DateTime.Now:yyyy-MM-dd HH:mm:ss.fff}] Dashboard patterns loaded: {Patterns.Count}\r\n");
-            }
-            catch { }
-        }
 
-        [RelayCommand]
-        private void NavigateToDetail(DesignPattern pattern)
+            _logger.LogInformation("Dashboard patterns loaded: {Count}", Patterns.Count);
+        }
+        catch (Exception ex)
         {
-            if (pattern != null)
-            {
-                var mainWindow = System.Windows.Application.Current.MainWindow as Views.MainWindow;
-                if (mainWindow != null)
-                {
-                    // Navigate with parameter
-                    mainWindow.Navigate(typeof(Views.Pages.PatternDetailPage), pattern.Id);
-                }
-            }
+            _logger.LogError(ex, "Failed to load dashboard patterns.");
+            throw;
         }
     }
 
+    [RelayCommand]
+    private async Task NavigateToDetail(DesignPattern? pattern)
+    {
+        if (pattern is null)
+            return;
+
+        await _navigation.NavigateToPatternDetailAsync(pattern.Id);
+    }
 }

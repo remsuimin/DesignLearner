@@ -10,11 +10,9 @@ namespace DesignPatternMaster.Core.Tests.Entities
         public void Section_ShouldInitializeWithRequiredProperties()
         {
             // Arrange & Act
-            var section = new Section
-            {
-                Title = "Introduction",
-                Content = "This is the introduction content"
-            };
+            var section = new Section(
+                title: "Introduction",
+                content: "This is the introduction content");
 
             // Assert
             section.Title.Should().Be("Introduction");
@@ -27,17 +25,13 @@ namespace DesignPatternMaster.Core.Tests.Entities
         public void Section_ShouldAllowSettingCodeSample()
         {
             // Arrange
-            var section = new Section
-            {
-                Title = "Example",
-                Content = "Example content",
-                CodeSample = new CodeSample
-                {
-                    Language = "csharp",
-                    Code = "var x = 10;",
-                    Description = "Variable declaration"
-                }
-            };
+            var section = new Section(
+                title: "Example",
+                content: "Example content",
+                codeSample: new CodeSample(
+                    language: "csharp",
+                    code: "var x = 10;",
+                    description: "Variable declaration"));
 
             // Assert
             section.CodeSample.Should().NotBeNull();
@@ -48,12 +42,10 @@ namespace DesignPatternMaster.Core.Tests.Entities
         public void Section_ShouldAllowSettingImagePath()
         {
             // Arrange
-            var section = new Section
-            {
-                Title = "Diagram",
-                Content = "See diagram below",
-                ImagePath = "/images/diagram.png"
-            };
+            var section = new Section(
+                title: "Diagram",
+                content: "See diagram below",
+                imagePath: "/images/diagram.png");
 
             // Assert
             section.ImagePath.Should().Be("/images/diagram.png");
@@ -66,12 +58,10 @@ namespace DesignPatternMaster.Core.Tests.Entities
         public void CodeSample_ShouldInitializeWithRequiredProperties()
         {
             // Arrange & Act
-            var codeSample = new CodeSample
-            {
-                Language = "csharp",
-                Code = "public class Example { }",
-                Description = "Example class"
-            };
+            var codeSample = new CodeSample(
+                language: "csharp",
+                code: "public class Example { }",
+                description: "Example class");
 
             // Assert
             codeSample.Language.Should().Be("csharp");
@@ -86,12 +76,10 @@ namespace DesignPatternMaster.Core.Tests.Entities
         public void CodeSample_ShouldSupportMultipleLanguages(string language, string code)
         {
             // Arrange & Act
-            var codeSample = new CodeSample
-            {
-                Language = language,
-                Code = code,
-                Description = "Test"
-            };
+            var codeSample = new CodeSample(
+                language: language,
+                code: code,
+                description: "Test");
 
             // Assert
             codeSample.Language.Should().Be(language);

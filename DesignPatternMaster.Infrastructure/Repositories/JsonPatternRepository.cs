@@ -3,8 +3,10 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text.Json;
+using System.Text.Json.Serialization;
 using System.Threading.Tasks;
 using DesignPatternMaster.Core.Entities;
+using DesignPatternMaster.Core.Enums;
 using DesignPatternMaster.Core.Interfaces;
 
 namespace DesignPatternMaster.Infrastructure.Repositories
@@ -115,7 +117,8 @@ namespace DesignPatternMaster.Infrastructure.Repositories
             {
                 _cachedPatterns = JsonSerializer.Deserialize<List<DesignPattern>>(jsonText, new JsonSerializerOptions
                 {
-                    PropertyNameCaseInsensitive = true
+                    PropertyNameCaseInsensitive = true,
+                    Converters = { new JsonStringEnumConverter() }
                 });
             }
             catch (JsonException)
@@ -136,22 +139,48 @@ namespace DesignPatternMaster.Infrastructure.Repositories
                 }
                 _cachedPatterns = JsonSerializer.Deserialize<List<DesignPattern>>(sanitized, new JsonSerializerOptions
                 {
-                    PropertyNameCaseInsensitive = true
+                    PropertyNameCaseInsensitive = true,
+                    Converters = { new JsonStringEnumConverter() }
                 });
             }
             _cachedPatterns = _cachedPatterns ?? new List<DesignPattern>();
         }
 
-        public async Task<IEnumerable<DesignPattern>> GetAllPatternsAsync()
+        public async Task<IReadOnlyList<DesignPattern>> GetAllPatternsAsync(CancellationToken cancellationToken = default)
         {
             await EnsureLoadedAsync();
-            return _cachedPatterns ?? new List<DesignPattern>();
+            return _cachedPatterns?.ToList() ?? new List<DesignPattern>();
         }
 
-        public async Task<DesignPattern?> GetPatternByIdAsync(string id)
+        public async Task<DesignPattern?> GetPatternByIdAsync(string id, CancellationToken cancellationToken = default)
         {
             await EnsureLoadedAsync();
-            return _cachedPatterns?.FirstOrDefault(p => p.Id == id);
+            var normalized = id?.Trim() ?? string.Empty;
+            return _cachedPatterns?.FirstOrDefault(p => p.Id.Equals(normalized, StringComparison.OrdinalIgnoreCase));
+        }
+
+        public async Task<IReadOnlyList<DesignPattern>> GetByCategoryAsync(PatternCategory category, CancellationToken cancellationToken = default)
+        {
+            var all = await GetAllPatternsAsync(cancellationToken);
+            return all.Where(p => p.Category == category).ToList();
+        }
+
+        public async Task<IReadOnlyList<DesignPattern>> SearchAsync(string keyword, CancellationToken cancellationToken = default)
+        {
+            if (string.IsNullOrWhiteSpace(keyword))
+                return new List<DesignPattern>();
+
+            var all = await GetAllPatternsAsync(cancellationToken);
+            return all.Where(p =>
+                p.Name.Contains(keyword, StringComparison.OrdinalIgnoreCase) ||
+                p.Summary.Contains(keyword, StringComparison.OrdinalIgnoreCase) ||
+                p.Tags.Any(t => t.Contains(keyword, StringComparison.OrdinalIgnoreCase))).ToList();
+        }
+
+        public async Task<int> CountAsync(CancellationToken cancellationToken = default)
+        {
+            var all = await GetAllPatternsAsync(cancellationToken);
+            return all.Count;
         }
     }
 }

@@ -1,4 +1,5 @@
 using DesignPatternMaster.Core.Entities;
+using DesignPatternMaster.Core.Enums;
 using FluentAssertions;
 using Xunit;
 
@@ -10,24 +11,24 @@ namespace DesignPatternMaster.Core.Tests.Entities
         public void DesignPattern_ShouldInitializeWithRequiredProperties()
         {
             // Arrange & Act
-            var pattern = new DesignPattern
-            {
-                Id = "singleton",
-                Name = "Singleton Pattern",
-                Summary = "Ensures a class has only one instance",
-                Category = "Creational",
-                Difficulty = "Beginner",
-                ModernRelevance = "Still widely used in modern applications"
-            };
+            var pattern = new DesignPattern(
+                id: "singleton",
+                name: "Singleton Pattern",
+                summary: "Ensures a class has only one instance",
+                category: PatternCategory.Creational,
+                difficulty: DifficultyLevel.Beginner,
+                modernRelevance: "Still widely used in modern applications");
 
             // Assert
             pattern.Id.Should().Be("singleton");
             pattern.Name.Should().Be("Singleton Pattern");
             pattern.Summary.Should().Be("Ensures a class has only one instance");
-            pattern.Category.Should().Be("Creational");
-            pattern.Difficulty.Should().Be("Beginner");
+            pattern.Category.Should().Be(PatternCategory.Creational);
+            pattern.Difficulty.Should().Be(DifficultyLevel.Beginner);
             pattern.ModernRelevance.Should().Be("Still widely used in modern applications");
             pattern.IsAntiPattern.Should().BeFalse();
+            pattern.IsModern.Should().BeFalse();
+            pattern.IconPath.Should().BeNull();
             pattern.Sections.Should().NotBeNull().And.BeEmpty();
             pattern.Tags.Should().NotBeNull().And.BeEmpty();
         }
@@ -36,16 +37,14 @@ namespace DesignPatternMaster.Core.Tests.Entities
         public void DesignPattern_ShouldAllowSettingIsAntiPattern()
         {
             // Arrange
-            var pattern = new DesignPattern
-            {
-                Id = "singleton",
-                Name = "Singleton Pattern",
-                Summary = "Test",
-                Category = "Creational",
-                Difficulty = "Beginner",
-                ModernRelevance = "Test",
-                IsAntiPattern = true
-            };
+            var pattern = new DesignPattern(
+                id: "singleton",
+                name: "Singleton Pattern",
+                summary: "Test",
+                category: PatternCategory.Creational,
+                difficulty: DifficultyLevel.Beginner,
+                modernRelevance: "Test",
+                isAntiPattern: true);
 
             // Assert
             pattern.IsAntiPattern.Should().BeTrue();
@@ -55,24 +54,20 @@ namespace DesignPatternMaster.Core.Tests.Entities
         public void DesignPattern_ShouldAllowAddingSections()
         {
             // Arrange
-            var pattern = new DesignPattern
-            {
-                Id = "test",
-                Name = "Test",
-                Summary = "Test",
-                Category = "Test",
-                Difficulty = "Test",
-                ModernRelevance = "Test"
-            };
+            var pattern = new DesignPattern(
+                id: "test",
+                name: "Test",
+                summary: "Test",
+                category: PatternCategory.Creational,
+                difficulty: DifficultyLevel.Beginner,
+                modernRelevance: "Test");
 
-            var section = new Section
-            {
-                Title = "Introduction",
-                Content = "This is an introduction"
-            };
+            var section = new Section(
+                title: "Introduction",
+                content: "This is an introduction");
 
             // Act
-            pattern.Sections.Add(section);
+            pattern.AddSection(section);
 
             // Assert
             pattern.Sections.Should().HaveCount(1);
@@ -83,19 +78,17 @@ namespace DesignPatternMaster.Core.Tests.Entities
         public void DesignPattern_ShouldAllowAddingTags()
         {
             // Arrange
-            var pattern = new DesignPattern
-            {
-                Id = "test",
-                Name = "Test",
-                Summary = "Test",
-                Category = "Test",
-                Difficulty = "Test",
-                ModernRelevance = "Test"
-            };
+            var pattern = new DesignPattern(
+                id: "test",
+                name: "Test",
+                summary: "Test",
+                category: PatternCategory.Creational,
+                difficulty: DifficultyLevel.Beginner,
+                modernRelevance: "Test");
 
             // Act
-            pattern.Tags.Add("design");
-            pattern.Tags.Add("pattern");
+            pattern.AddTag("design");
+            pattern.AddTag("pattern");
 
             // Assert
             pattern.Tags.Should().HaveCount(2);
@@ -106,16 +99,14 @@ namespace DesignPatternMaster.Core.Tests.Entities
         public void DesignPattern_ShouldAllowSettingIconPath()
         {
             // Arrange
-            var pattern = new DesignPattern
-            {
-                Id = "test",
-                Name = "Test",
-                Summary = "Test",
-                Category = "Test",
-                Difficulty = "Test",
-                ModernRelevance = "Test",
-                IconPath = "/icons/singleton.png"
-            };
+            var pattern = new DesignPattern(
+                id: "test",
+                name: "Test",
+                summary: "Test",
+                category: PatternCategory.Creational,
+                difficulty: DifficultyLevel.Beginner,
+                modernRelevance: "Test",
+                iconPath: "/icons/singleton.png");
 
             // Assert
             pattern.IconPath.Should().Be("/icons/singleton.png");

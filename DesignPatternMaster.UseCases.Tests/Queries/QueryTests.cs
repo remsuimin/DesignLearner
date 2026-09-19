@@ -1,4 +1,5 @@
 using DesignPatternMaster.Core.Entities;
+using DesignPatternMaster.Core.Enums;
 using DesignPatternMaster.Core.Interfaces;
 using DesignPatternMaster.UseCases.Queries;
 using FluentAssertions;
@@ -24,24 +25,20 @@ namespace DesignPatternMaster.UseCases.Tests.Queries
             // Arrange
             var expectedPatterns = new List<DesignPattern>
             {
-                new DesignPattern
-                {
-                    Id = "singleton",
-                    Name = "Singleton",
-                    Summary = "Test",
-                    Category = "Creational",
-                    Difficulty = "Beginner",
-                    ModernRelevance = "Test"
-                },
-                new DesignPattern
-                {
-                    Id = "factory",
-                    Name = "Factory",
-                    Summary = "Test",
-                    Category = "Creational",
-                    Difficulty = "Intermediate",
-                    ModernRelevance = "Test"
-                }
+                new DesignPattern(
+                    id: "singleton",
+                    name: "Singleton",
+                    summary: "Test",
+                    category: PatternCategory.Creational,
+                    difficulty: DifficultyLevel.Beginner,
+                    modernRelevance: "Test"),
+                new DesignPattern(
+                    id: "factory",
+                    name: "Factory",
+                    summary: "Test",
+                    category: PatternCategory.Creational,
+                    difficulty: DifficultyLevel.Intermediate,
+                    modernRelevance: "Test")
             };
 
             _mockRepository
@@ -90,15 +87,13 @@ namespace DesignPatternMaster.UseCases.Tests.Queries
         public async Task ExecuteAsync_ShouldReturnPattern_WhenIdExists()
         {
             // Arrange
-            var expectedPattern = new DesignPattern
-            {
-                Id = "singleton",
-                Name = "Singleton",
-                Summary = "Test",
-                Category = "Creational",
-                Difficulty = "Beginner",
-                ModernRelevance = "Test"
-            };
+            var expectedPattern = new DesignPattern(
+                id: "singleton",
+                name: "Singleton",
+                summary: "Test",
+                category: PatternCategory.Creational,
+                difficulty: DifficultyLevel.Beginner,
+                modernRelevance: "Test");
 
             _mockRepository
                 .Setup(r => r.GetPatternByIdAsync("singleton"))

@@ -98,6 +98,16 @@
                                                   Foreground="{StaticResource TextSecondaryBrush}"
                                                   FontWeight="Medium"/>
                                     </Border>
+                                    <Border Background="{StaticResource AccentBrush}"
+                                            CornerRadius="6"
+                                            Padding="10,4"
+                                            Margin="8,0,0,0"
+                                            Visibility="{Binding IsModern, Converter={StaticResource BooleanToVisibilityConverter}}">
+                                        <TextBlock Text="モダン"
+                                                   Foreground="{StaticResource TextPrimaryBrush}"
+                                                   FontSize="12"
+                                                   FontWeight="Medium"/>
+                                    </Border>
                                 </StackPanel>
                                 
                     <!-- Button overlay for command (use plain overlay style to avoid hover background changes) -->
@@ -106,6 +116,7 @@
                         BorderThickness="0" 
                         Cursor="Hand"
                         Style="{StaticResource OverlayButton}"
+                        AutomationProperties.Name="{Binding Name}"
                         Command="{Binding DataContext.NavigateToDetailCommand, RelativeSource={RelativeSource AncestorType=Page}}" 
                         CommandParameter="{Binding}"/>
                             </Grid>

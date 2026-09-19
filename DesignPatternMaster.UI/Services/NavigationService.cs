@@ -37,6 +37,7 @@ public sealed class NavigationService : INavigationService
         {
             var page = _services.GetRequiredService<DashboardPage>();
             Frame.Navigate(page);
+            TrimJournal();
             await page.ViewModel.LoadDataAsync(cancellationToken);
         }
         catch (Exception ex)
@@ -52,6 +53,7 @@ public sealed class NavigationService : INavigationService
         {
             var page = _services.GetRequiredService<SettingsPage>();
             Frame.Navigate(page);
+            TrimJournal();
         }
         catch (Exception ex)
         {
@@ -66,6 +68,7 @@ public sealed class NavigationService : INavigationService
         {
             var page = _services.GetRequiredService<PatternDetailPage>();
             Frame.Navigate(page);
+            TrimJournal();
             await page.ViewModel.LoadPatternAsync(patternId, cancellationToken);
         }
         catch (PatternNotFoundException ex)
@@ -78,6 +81,17 @@ public sealed class NavigationService : INavigationService
         {
             _logger.LogError(ex, "Failed to navigate to pattern detail: {PatternId}", patternId);
             _dialog.ShowError($"詳細画面の表示に失敗しました: {ex.Message}", "エラー");
+        }
+    }
+
+    private void TrimJournal()
+    {
+        const int MaxJournalEntries = 10;
+        var frame = Frame;
+        while (frame.CanGoBack && frame.BackStack.Cast<object>().Count() > MaxJournalEntries)
+        {
+            if (frame.RemoveBackEntry() is null)
+                break;
         }
     }
 }

@@ -10,70 +10,6 @@ using Xunit;
 
 namespace DesignPatternMaster.UseCases.Tests.Queries
 {
-    public class GetPatternListQueryTests
-    {
-        private readonly Mock<IPatternRepository> _mockRepository;
-        private readonly GetPatternListQuery _query;
-
-        public GetPatternListQueryTests()
-        {
-            _mockRepository = new Mock<IPatternRepository>();
-            _query = new GetPatternListQuery(_mockRepository.Object, Mock.Of<ILogger<GetPatternListQuery>>());
-        }
-
-        [Fact]
-        public async Task ExecuteAsync_ShouldReturnAllPatterns()
-        {
-            // Arrange
-            var expectedPatterns = new List<DesignPattern>
-            {
-                new DesignPattern(
-                    id: "singleton",
-                    name: "Singleton",
-                    summary: "Test",
-                    category: PatternCategory.Creational,
-                    difficulty: DifficultyLevel.Beginner,
-                    modernRelevance: "Test"),
-                new DesignPattern(
-                    id: "factory",
-                    name: "Factory",
-                    summary: "Test",
-                    category: PatternCategory.Creational,
-                    difficulty: DifficultyLevel.Intermediate,
-                    modernRelevance: "Test")
-            };
-
-            _mockRepository
-                .Setup(r => r.GetAllPatternsAsync())
-                .ReturnsAsync(expectedPatterns);
-
-            // Act
-            var result = await _query.ExecuteAsync();
-
-            // Assert
-            result.Should().NotBeNull();
-            result.Should().HaveCount(2);
-            result.Should().BeEquivalentTo(expectedPatterns);
-            _mockRepository.Verify(r => r.GetAllPatternsAsync(), Times.Once);
-        }
-
-        [Fact]
-        public async Task ExecuteAsync_ShouldReturnEmptyList_WhenNoPatternsExist()
-        {
-            // Arrange
-            _mockRepository
-                .Setup(r => r.GetAllPatternsAsync())
-                .ReturnsAsync(new List<DesignPattern>());
-
-            // Act
-            var result = await _query.ExecuteAsync();
-
-            // Assert
-            result.Should().NotBeNull();
-            result.Should().BeEmpty();
-        }
-    }
-
     public class GetPatternDetailQueryTests
     {
         private readonly Mock<IPatternRepository> _mockRepository;
@@ -123,6 +59,7 @@ namespace DesignPatternMaster.UseCases.Tests.Queries
 
             // Assert
             await act.Should().ThrowAsync<PatternNotFoundException>();
+            _mockRepository.Verify(r => r.GetPatternByIdAsync("nonexistent"), Times.Once);
         }
 
         [Theory]
@@ -147,6 +84,34 @@ namespace DesignPatternMaster.UseCases.Tests.Queries
 
             // Assert
             _mockRepository.Verify(r => r.GetPatternByIdAsync(patternId), Times.Once);
+        }
+
+        [Fact]
+        public void Constructor_ShouldThrow_WhenRepositoryIsNull()
+        {
+            var act = () => new GetPatternDetailQuery(null!, Mock.Of<ILogger<GetPatternDetailQuery>>());
+            act.Should().Throw<ArgumentNullException>();
+        }
+
+        [Fact]
+        public void Constructor_ShouldThrow_WhenLoggerIsNull()
+        {
+            var act = () => new GetPatternDetailQuery(Mock.Of<IPatternRepository>(), null!);
+            act.Should().Throw<ArgumentNullException>();
+        }
+
+        [Fact]
+        public async Task ExecuteAsync_ShouldThrow_WhenIdIsEmpty()
+        {
+            var act = async () => await _query.ExecuteAsync("");
+            await act.Should().ThrowAsync<ArgumentException>();
+        }
+
+        [Fact]
+        public async Task ExecuteAsync_ShouldThrow_WhenIdIsWhitespace()
+        {
+            var act = async () => await _query.ExecuteAsync("   ");
+            await act.Should().ThrowAsync<ArgumentException>();
         }
     }
 }

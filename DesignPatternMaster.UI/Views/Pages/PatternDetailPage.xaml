@@ -7,8 +7,12 @@
       xmlns:helpers="clr-namespace:DesignPatternMaster.UI.Helpers"
       mc:Ignorable="d" 
       d:DesignHeight="800" d:DesignWidth="800"
-      Title="PatternDetailPage"
-      Background="{StaticResource BackgroundBrush}">
+       Title="PatternDetailPage"
+       Background="{StaticResource BackgroundBrush}">
+
+    <Page.Resources>
+        <BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter"/>
+    </Page.Resources>
 
     <ScrollViewer VerticalScrollBarVisibility="Auto" Style="{StaticResource ModernScrollViewer}">
         <Grid Margin="40,30,40,40" Style="{StaticResource PageEntranceStyle}">
@@ -39,6 +43,16 @@
                                   FontSize="13" 
                                   Foreground="{StaticResource TextSecondaryBrush}"
                                   FontWeight="Medium"/>
+                    </Border>
+                    <Border Background="{StaticResource AccentBrush}"
+                            CornerRadius="6"
+                            Padding="12,6"
+                            Margin="10,0,0,0"
+                            Visibility="{Binding SelectedPattern.IsModern, Converter={StaticResource BooleanToVisibilityConverter}}">
+                        <TextBlock Text="モダン"
+                                   Foreground="{StaticResource TextPrimaryBrush}"
+                                   FontSize="13"
+                                   FontWeight="Medium"/>
                     </Border>
                 </StackPanel>
             </StackPanel>

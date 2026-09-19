@@ -1,8 +1,10 @@
 using DesignPatternMaster.Core.Entities;
 using DesignPatternMaster.Core.Enums;
 using DesignPatternMaster.Core.Interfaces;
+using DesignPatternMaster.UseCases.Exceptions;
 using DesignPatternMaster.UseCases.Queries;
 using FluentAssertions;
+using Microsoft.Extensions.Logging;
 using Moq;
 using Xunit;
 
@@ -16,7 +18,7 @@ namespace DesignPatternMaster.UseCases.Tests.Queries
         public GetPatternListQueryTests()
         {
             _mockRepository = new Mock<IPatternRepository>();
-            _query = new GetPatternListQuery(_mockRepository.Object);
+            _query = new GetPatternListQuery(_mockRepository.Object, Mock.Of<ILogger<GetPatternListQuery>>());
         }
 
         [Fact]
@@ -80,7 +82,7 @@ namespace DesignPatternMaster.UseCases.Tests.Queries
         public GetPatternDetailQueryTests()
         {
             _mockRepository = new Mock<IPatternRepository>();
-            _query = new GetPatternDetailQuery(_mockRepository.Object);
+            _query = new GetPatternDetailQuery(_mockRepository.Object, Mock.Of<ILogger<GetPatternDetailQuery>>());
         }
 
         [Fact]
@@ -109,7 +111,7 @@ namespace DesignPatternMaster.UseCases.Tests.Queries
         }
 
         [Fact]
-        public async Task ExecuteAsync_ShouldReturnNull_WhenIdDoesNotExist()
+        public async Task ExecuteAsync_ShouldThrowPatternNotFoundException_WhenIdDoesNotExist()
         {
             // Arrange
             _mockRepository
@@ -117,10 +119,10 @@ namespace DesignPatternMaster.UseCases.Tests.Queries
                 .ReturnsAsync((DesignPattern?)null);
 
             // Act
-            var result = await _query.ExecuteAsync("nonexistent");
+            var act = async () => await _query.ExecuteAsync("nonexistent");
 
             // Assert
-            result.Should().BeNull();
+            await act.Should().ThrowAsync<PatternNotFoundException>();
         }
 
         [Theory]
@@ -132,7 +134,13 @@ namespace DesignPatternMaster.UseCases.Tests.Queries
             // Arrange
             _mockRepository
                 .Setup(r => r.GetPatternByIdAsync(It.IsAny<string>()))
-                .ReturnsAsync((DesignPattern?)null);
+                .ReturnsAsync(new DesignPattern(
+                    id: "singleton",
+                    name: "Singleton",
+                    summary: "Test",
+                    category: PatternCategory.Creational,
+                    difficulty: DifficultyLevel.Beginner,
+                    modernRelevance: "Test"));
 
             // Act
             await _query.ExecuteAsync(patternId);

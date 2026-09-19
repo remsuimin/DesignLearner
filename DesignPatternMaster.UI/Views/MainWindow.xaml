@@ -43,14 +43,14 @@
 
                 <!-- Window Buttons -->
                 <StackPanel Grid.Column="2" Orientation="Horizontal">
-                    <Button Style="{StaticResource WindowCaptionButton}" Content="─" Click="MinimizeButton_Click"/>
-                    <Button x:Name="MaximizeButton" Style="{StaticResource WindowCaptionButton}" Content="⬜" Click="MaximizeButton_Click"/>
-                    <Button Content="✕" Click="CloseButton_Click">
+                    <Button Style="{StaticResource WindowCaptionButton}" Content="─" Click="MinimizeButton_Click" AutomationProperties.Name="最小化"/>
+                    <Button x:Name="MaximizeButton" Style="{StaticResource WindowCaptionButton}" Content="⬜" Click="MaximizeButton_Click" AutomationProperties.Name="最大化"/>
+                    <Button Content="✕" Click="CloseButton_Click" AutomationProperties.Name="閉じる">
                         <Button.Style>
                             <Style TargetType="Button" BasedOn="{StaticResource WindowCaptionButton}">
                                 <Style.Triggers>
                                     <Trigger Property="IsMouseOver" Value="True">
-                                        <Setter Property="Background" Value="#E81123"/>
+                                        <Setter Property="Background" Value="{StaticResource ErrorBrush}"/>
                                         <Setter Property="Foreground" Value="White"/>
                                     </Trigger>
                                 </Style.Triggers>
@@ -83,7 +83,9 @@
                             Margin="0,0,0,5"
                             Command="{Binding NavigateCommand}" 
                             CommandParameter="Dashboard"
-                            HorizontalAlignment="Stretch">
+                            HorizontalAlignment="Stretch"
+                            AutomationProperties.Name="Dashboardに移動"
+                            ToolTip="Dashboardに移動">
                             <StackPanel Orientation="Horizontal">
                                 <TextBlock Text="📊" Margin="0,0,8,0" FontSize="18" Foreground="{StaticResource AccentBrush}" VerticalAlignment="Center"/>
                                 <TextBlock Text="Dashboard" VerticalAlignment="Center"/>
@@ -94,7 +96,9 @@
                             HorizontalContentAlignment="Left"
                             Margin="0,0,0,5"
                             Command="{Binding NavigateCommand}"
-                            CommandParameter="Settings">
+                            CommandParameter="Settings"
+                            AutomationProperties.Name="設定に移動"
+                            ToolTip="設定に移動">
                             <StackPanel Orientation="Horizontal">
                                 <TextBlock Text="⚙️" Margin="0,0,8,0" FontSize="18" Foreground="{StaticResource AccentBrush}" VerticalAlignment="Center"/>
                                 <TextBlock Text="Settings" VerticalAlignment="Center"/>

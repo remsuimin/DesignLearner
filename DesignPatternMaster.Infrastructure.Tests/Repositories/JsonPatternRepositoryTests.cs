@@ -206,14 +206,13 @@ namespace DesignPatternMaster.Infrastructure.Tests.Repositories
         }
 
         [Fact]
-        public async Task GetAllPatternsAsync_ShouldHandleInvalidJson_AndReturnEmptyList()
+        public async Task GetAllPatternsAsync_ShouldThrowJsonException_WhenJsonIsInvalid()
         {
             // Arrange
             await File.WriteAllTextAsync(_testFilePath, "{ invalid json }");
             var repository = new JsonPatternRepository(_testFilePath);
 
             // Act & Assert
-            // Should not throw, but return empty list or handle gracefully
             var act = async () => await repository.GetAllPatternsAsync();
             await act.Should().ThrowAsync<JsonException>();
         }
@@ -239,7 +238,7 @@ namespace DesignPatternMaster.Infrastructure.Tests.Repositories
             var repository = new JsonPatternRepository(_testFilePath);
 
             // Act
-            var result = await repository.GetPatternByIdAsync("singleton");
+            var result = await repository.GetPatternByIdAsync("SINGLETON");
 
             // Assert
             result.Should().NotBeNull();
@@ -336,6 +335,95 @@ namespace DesignPatternMaster.Infrastructure.Tests.Repositories
             result.Should().NotBeEmpty();
             result.Select(p => p.Id).Should().Contain("strategy");
             result.Should().OnlyContain(p => !string.IsNullOrWhiteSpace(p.Id));
+        }
+
+        [Fact]
+        public async Task GetAllPatternsAsync_ShouldThrowJsonException_WhenJsonIsEmptyString()
+        {
+            await File.WriteAllTextAsync(_testFilePath, "");
+            var repository = new JsonPatternRepository(_testFilePath);
+
+            var act = async () => await repository.GetAllPatternsAsync();
+            await act.Should().ThrowAsync<JsonException>();
+        }
+
+        [Fact]
+        public async Task GetAllPatternsAsync_ShouldThrowJsonException_WhenJsonIsWhitespace()
+        {
+            await File.WriteAllTextAsync(_testFilePath, "   ");
+            var repository = new JsonPatternRepository(_testFilePath);
+
+            var act = async () => await repository.GetAllPatternsAsync();
+            await act.Should().ThrowAsync<JsonException>();
+        }
+
+        [Fact]
+        public async Task GetAllPatternsAsync_ShouldReturnEmptyList_WhenJsonIsNullLiteral()
+        {
+            await File.WriteAllTextAsync(_testFilePath, "null");
+            var repository = new JsonPatternRepository(_testFilePath);
+
+            var result = await repository.GetAllPatternsAsync();
+            result.Should().NotBeNull();
+            result.Should().BeEmpty();
+        }
+
+        [Fact]
+        public async Task GetAllPatternsAsync_ShouldThrowJsonException_WhenJsonIsEmptyObject()
+        {
+            await File.WriteAllTextAsync(_testFilePath, "{}");
+            var repository = new JsonPatternRepository(_testFilePath);
+
+            var act = async () => await repository.GetAllPatternsAsync();
+            await act.Should().ThrowAsync<JsonException>();
+        }
+
+        [Fact]
+        public async Task GetAllPatternsAsync_ShouldHandleConcurrentCalls()
+        {
+            var testPattern = new DesignPattern(
+                id: "singleton",
+                name: "Singleton",
+                summary: "Test",
+                category: PatternCategory.Creational,
+                difficulty: DifficultyLevel.Beginner,
+                modernRelevance: "Test");
+            var json = JsonSerializer.Serialize(new List<DesignPattern> { testPattern });
+            await File.WriteAllTextAsync(_testFilePath, json);
+            var repository = new JsonPatternRepository(_testFilePath);
+
+            var tasks = Enumerable.Range(0, 8).Select(_ => repository.GetAllPatternsAsync());
+            var results = await Task.WhenAll(tasks);
+
+            results.Should().HaveCount(8);
+            foreach (var r in results)
+            {
+                r.Should().HaveCount(1);
+                r.First().Id.Should().Be("singleton");
+            }
+        }
+
+        [Fact]
+        public async Task GetPatternByIdAsync_ShouldBeCaseInsensitive_WithUpperCase()
+        {
+            var testPatterns = new List<DesignPattern>
+            {
+                new DesignPattern(
+                    id: "singleton",
+                    name: "Singleton",
+                    summary: "Test",
+                    category: PatternCategory.Creational,
+                    difficulty: DifficultyLevel.Beginner,
+                    modernRelevance: "Test")
+            };
+            var json = JsonSerializer.Serialize(testPatterns);
+            await File.WriteAllTextAsync(_testFilePath, json);
+            var repository = new JsonPatternRepository(_testFilePath);
+
+            var result = await repository.GetPatternByIdAsync("SINGLETON");
+
+            result.Should().NotBeNull();
+            result!.Id.Should().Be("singleton");
         }
     }
 }

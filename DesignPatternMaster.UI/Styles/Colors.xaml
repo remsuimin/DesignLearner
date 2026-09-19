@@ -51,4 +51,14 @@
         <GradientStop Color="#10B981" Offset="0"/>
         <GradientStop Color="#3B82F6" Offset="1"/>
     </LinearGradientBrush>
+
+    <LinearGradientBrush x:Key="InfoGradientBrush" StartPoint="0,0" EndPoint="1,1">
+        <GradientStop Color="#10B981" Offset="0"/>
+        <GradientStop Color="#06B6D4" Offset="1"/>
+    </LinearGradientBrush>
+
+    <LinearGradientBrush x:Key="WarningGradientBrush" StartPoint="0,0" EndPoint="1,1">
+        <GradientStop Color="#F59E0B" Offset="0"/>
+        <GradientStop Color="#EF4444" Offset="1"/>
+    </LinearGradientBrush>
 </ResourceDictionary>

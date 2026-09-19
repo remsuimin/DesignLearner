@@ -1,13 +1,13 @@
 <Page x:Class="DesignPatternMaster.UI.Views.Pages.SettingsPage"
-      xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
-      xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-      xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
-      xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
-      xmlns:viewModels="clr-namespace:DesignPatternMaster.UI.ViewModels"
-      mc:Ignorable="d" 
-      d:DesignHeight="450" d:DesignWidth="800"
-      Title="SettingsPage"
-      Background="{StaticResource BackgroundBrush}">
+       xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+       xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+       xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+       xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+       xmlns:viewModels="clr-namespace:DesignPatternMaster.UI.ViewModels"
+       mc:Ignorable="d" 
+       d:DesignHeight="450" d:DesignWidth="800"
+       Title="SettingsPage"
+       Background="{StaticResource BackgroundBrush}">
 
     <ScrollViewer VerticalScrollBarVisibility="Auto" Style="{StaticResource ModernScrollViewer}">
         <Grid Margin="40,30,40,40" Style="{StaticResource PageEntranceStyle}">
@@ -20,8 +20,8 @@
             <StackPanel Grid.Row="0" Margin="0,0,0,30">
                 <TextBlock Text="設定" Style="{StaticResource Heading1}"/>
                 <TextBlock Text="アプリケーションの設定をカスタマイズできます。" 
-                           Style="{StaticResource SecondaryText}" 
-                           FontSize="16"/>
+                            Style="{StaticResource SecondaryText}" 
+                            FontSize="16"/>
             </StackPanel>
 
             <!-- Settings Content -->
@@ -30,27 +30,22 @@
                 <!-- Appearance Section -->
                 <Border Background="{StaticResource SurfaceBrush}" 
                         BorderThickness="1"
+                        BorderBrush="{StaticResource PrimaryGradientBrush}"
                         CornerRadius="16" 
                         Padding="28"
                         Margin="0,0,0,20">
-                    <Border.BorderBrush>
-                        <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
-                            <GradientStop Color="#6366F1" Offset="0"/>
-                            <GradientStop Color="#8B5CF6" Offset="1"/>
-                        </LinearGradientBrush>
-                    </Border.BorderBrush>
                     <Border.Style>
                         <Style TargetType="Border">
                             <Setter Property="Effect">
                                 <Setter.Value>
-                                    <DropShadowEffect Color="#6366F1" BlurRadius="20" ShadowDepth="0" Opacity="0.2"/>
+                                    <DropShadowEffect Color="{StaticResource PrimaryColor}" BlurRadius="20" ShadowDepth="0" Opacity="0.2"/>
                                 </Setter.Value>
                             </Setter>
                             <Style.Triggers>
                                 <Trigger Property="IsMouseOver" Value="True">
                                     <Setter Property="Effect">
                                         <Setter.Value>
-                                            <DropShadowEffect Color="#6366F1" BlurRadius="30" ShadowDepth="0" Opacity="0.4"/>
+                                            <DropShadowEffect Color="{StaticResource PrimaryColor}" BlurRadius="30" ShadowDepth="0" Opacity="0.4"/>
                                         </Setter.Value>
                                     </Setter>
                                 </Trigger>
@@ -59,13 +54,7 @@
                     </Border.Style>
                     <StackPanel>
                         <StackPanel Orientation="Horizontal" Margin="0,0,0,20">
-                            <Border Width="40" Height="40" CornerRadius="10" Margin="0,0,16,0">
-                                <Border.Background>
-                                    <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
-                                        <GradientStop Color="#6366F1" Offset="0"/>
-                                        <GradientStop Color="#8B5CF6" Offset="1"/>
-                                    </LinearGradientBrush>
-                                </Border.Background>
+                            <Border Width="40" Height="40" CornerRadius="10" Margin="0,0,16,0" Background="{StaticResource PrimaryGradientBrush}">
                                 <TextBlock Text="🎨" FontSize="22" HorizontalAlignment="Center" VerticalAlignment="Center"/>
                             </Border>
                             <TextBlock Text="外観" Style="{StaticResource Heading3}" VerticalAlignment="Center"/>
@@ -80,14 +69,15 @@
                             <StackPanel Grid.Column="0">
                                 <TextBlock Text="テーマ" Style="{StaticResource BodyText}" FontWeight="SemiBold" FontSize="15"/>
                                 <TextBlock Text="アプリケーションの配色テーマ" 
-                                           Style="{StaticResource SecondaryText}" 
-                                           FontSize="13" Margin="0,4,0,0"/>
+                                            Style="{StaticResource SecondaryText}" 
+                                            FontSize="13" Margin="0,4,0,0"/>
                             </StackPanel>
                             <ComboBox Grid.Column="1" 
-                                      Width="150" 
-                                      Style="{StaticResource ModernComboBox}"
-                                      SelectedItem="{Binding SelectedTheme}"
-                                      VerticalAlignment="Center">
+                                       Width="150" 
+                                       Style="{StaticResource ModernComboBox}"
+                                       SelectedValue="{Binding SelectedTheme}" SelectedValuePath="Content"
+                                       AutomationProperties.Name="テーマ"
+                                       VerticalAlignment="Center">
                                 <ComboBoxItem Content="Dark" IsSelected="True"/>
                                 <ComboBoxItem Content="Light" IsEnabled="False"/>
                             </ComboBox>
@@ -102,22 +92,23 @@
                             <StackPanel Grid.Column="0">
                                 <TextBlock Text="コードフォントサイズ" Style="{StaticResource BodyText}" FontWeight="SemiBold" FontSize="15"/>
                                 <TextBlock Text="コードサンプルの表示サイズ" 
-                                           Style="{StaticResource SecondaryText}" 
-                                           FontSize="13" Margin="0,4,0,0"/>
+                                            Style="{StaticResource SecondaryText}" 
+                                            FontSize="13" Margin="0,4,0,0"/>
                             </StackPanel>
                             <StackPanel Grid.Column="1" VerticalAlignment="Center">
                                 <Slider Minimum="10" 
-                                        Maximum="20" 
-                                        Style="{StaticResource ModernSlider}"
-                                        Value="{Binding CodeFontSize}"
-                                        TickFrequency="2"
-                                        IsSnapToTickEnabled="True"
-                                        Margin="0,0,0,8"/>
+                                         Maximum="20" 
+                                         Style="{StaticResource ModernSlider}"
+                                         Value="{Binding CodeFontSize}"
+                                         TickFrequency="2"
+                                         IsSnapToTickEnabled="True"
+                                         AutomationProperties.Name="コードフォントサイズ"
+                                         Margin="0,0,0,8"/>
                                 <TextBlock Text="{Binding CodeFontSize, StringFormat={}{0:F0}px}" 
-                                           HorizontalAlignment="Center"
-                                           Foreground="#6366F1"
-                                           FontWeight="SemiBold"
-                                           FontSize="13"/>
+                                            HorizontalAlignment="Center"
+                                            Foreground="{StaticResource PrimaryBrush}"
+                                            FontWeight="SemiBold"
+                                            FontSize="13"/>
                             </StackPanel>
                         </Grid>
                     </StackPanel>
@@ -126,27 +117,22 @@
                 <!-- Data Section -->
                 <Border Background="{StaticResource SurfaceBrush}" 
                         BorderThickness="1"
+                        BorderBrush="{StaticResource InfoGradientBrush}"
                         CornerRadius="16" 
                         Padding="28"
                         Margin="0,0,0,20">
-                    <Border.BorderBrush>
-                        <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
-                            <GradientStop Color="#10B981" Offset="0"/>
-                            <GradientStop Color="#06B6D4" Offset="1"/>
-                        </LinearGradientBrush>
-                    </Border.BorderBrush>
                     <Border.Style>
                         <Style TargetType="Border">
                             <Setter Property="Effect">
                                 <Setter.Value>
-                                    <DropShadowEffect Color="#10B981" BlurRadius="20" ShadowDepth="0" Opacity="0.2"/>
+                                    <DropShadowEffect Color="{StaticResource AccentColor}" BlurRadius="20" ShadowDepth="0" Opacity="0.2"/>
                                 </Setter.Value>
                             </Setter>
                             <Style.Triggers>
                                 <Trigger Property="IsMouseOver" Value="True">
                                     <Setter Property="Effect">
                                         <Setter.Value>
-                                            <DropShadowEffect Color="#10B981" BlurRadius="30" ShadowDepth="0" Opacity="0.4"/>
+                                            <DropShadowEffect Color="{StaticResource AccentColor}" BlurRadius="30" ShadowDepth="0" Opacity="0.4"/>
                                         </Setter.Value>
                                     </Setter>
                                 </Trigger>
@@ -155,13 +141,7 @@
                     </Border.Style>
                     <StackPanel>
                         <StackPanel Orientation="Horizontal" Margin="0,0,0,20">
-                            <Border Width="40" Height="40" CornerRadius="10" Margin="0,0,16,0">
-                                <Border.Background>
-                                    <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
-                                        <GradientStop Color="#10B981" Offset="0"/>
-                                        <GradientStop Color="#06B6D4" Offset="1"/>
-                                    </LinearGradientBrush>
-                                </Border.Background>
+                            <Border Width="40" Height="40" CornerRadius="10" Margin="0,0,16,0" Background="{StaticResource InfoGradientBrush}">
                                 <TextBlock Text="💾" FontSize="22" HorizontalAlignment="Center" VerticalAlignment="Center"/>
                             </Border>
                             <TextBlock Text="データ" Style="{StaticResource Heading3}" VerticalAlignment="Center"/>
@@ -175,15 +155,16 @@
                             <StackPanel Grid.Column="0">
                                 <TextBlock Text="データをリセット" Style="{StaticResource BodyText}" FontWeight="SemiBold" FontSize="15"/>
                                 <TextBlock Text="すべての学習データを初期状態に戻します" 
-                                           Style="{StaticResource SecondaryText}" 
-                                           FontSize="13" Margin="0,4,0,0"/>
+                                            Style="{StaticResource SecondaryText}" 
+                                            FontSize="13" Margin="0,4,0,0"/>
                             </StackPanel>
                             <Button Grid.Column="1" 
-                                    Content="リセット" 
-                                    Style="{StaticResource PrimaryButton}"
-                                    Command="{Binding ResetDataCommand}"
-                                    VerticalAlignment="Center"
-                                    Padding="24,10"/>
+                                     Content="リセット" 
+                                     Style="{StaticResource PrimaryButton}"
+                                     Command="{Binding ResetDataCommand}"
+                                     AutomationProperties.Name="データをリセット"
+                                     VerticalAlignment="Center"
+                                     Padding="24,10"/>
                         </Grid>
                     </StackPanel>
                 </Border>
@@ -191,26 +172,21 @@
                 <!-- About Section -->
                 <Border Background="{StaticResource SurfaceBrush}" 
                         BorderThickness="1"
+                        BorderBrush="{StaticResource WarningGradientBrush}"
                         CornerRadius="16" 
                         Padding="28">
-                    <Border.BorderBrush>
-                        <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
-                            <GradientStop Color="#F59E0B" Offset="0"/>
-                            <GradientStop Color="#EF4444" Offset="1"/>
-                        </LinearGradientBrush>
-                    </Border.BorderBrush>
                     <Border.Style>
                         <Style TargetType="Border">
                             <Setter Property="Effect">
                                 <Setter.Value>
-                                    <DropShadowEffect Color="#F59E0B" BlurRadius="20" ShadowDepth="0" Opacity="0.2"/>
+                                    <DropShadowEffect Color="{StaticResource WarningColor}" BlurRadius="20" ShadowDepth="0" Opacity="0.2"/>
                                 </Setter.Value>
                             </Setter>
                             <Style.Triggers>
                                 <Trigger Property="IsMouseOver" Value="True">
                                     <Setter Property="Effect">
                                         <Setter.Value>
-                                            <DropShadowEffect Color="#F59E0B" BlurRadius="30" ShadowDepth="0" Opacity="0.4"/>
+                                            <DropShadowEffect Color="{StaticResource WarningColor}" BlurRadius="30" ShadowDepth="0" Opacity="0.4"/>
                                         </Setter.Value>
                                     </Setter>
                                 </Trigger>
@@ -219,13 +195,7 @@
                     </Border.Style>
                     <StackPanel>
                         <StackPanel Orientation="Horizontal" Margin="0,0,0,20">
-                            <Border Width="40" Height="40" CornerRadius="10" Margin="0,0,16,0">
-                                <Border.Background>
-                                    <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
-                                        <GradientStop Color="#F59E0B" Offset="0"/>
-                                        <GradientStop Color="#EF4444" Offset="1"/>
-                                    </LinearGradientBrush>
-                                </Border.Background>
+                            <Border Width="40" Height="40" CornerRadius="10" Margin="0,0,16,0" Background="{StaticResource WarningGradientBrush}">
                                 <TextBlock Text="ℹ️" FontSize="22" HorizontalAlignment="Center" VerticalAlignment="Center"/>
                             </Border>
                             <TextBlock Text="アプリケーション情報" Style="{StaticResource Heading3}" VerticalAlignment="Center"/>
@@ -239,23 +209,24 @@
                             </Grid.ColumnDefinitions>
                             <TextBlock Grid.Column="0" Text="バージョン" Style="{StaticResource BodyText}" FontWeight="SemiBold" FontSize="15"/>
                             <Border Grid.Column="1" 
-                                    Background="#1F2937" 
-                                    CornerRadius="6" 
-                                    Padding="12,6">
+                                     Background="#1F2937" 
+                                     CornerRadius="6" 
+                                     Padding="12,6">
                                 <TextBlock Text="{Binding Version}" 
-                                           Foreground="#10B981"
-                                           FontFamily="Consolas"
-                                           FontWeight="SemiBold"
-                                           FontSize="13"/>
+                                            Foreground="#10B981"
+                                            FontFamily="Consolas"
+                                            FontWeight="SemiBold"
+                                            FontSize="13"/>
                             </Border>
                         </Grid>
 
                         <!-- GitHub Link -->
                         <Button Content="GitHubで見る" 
-                                Style="{StaticResource SecondaryButton}"
-                                Command="{Binding OpenGitHubCommand}"
-                                HorizontalAlignment="Left"
-                                Padding="20,10"/>
+                                 Style="{StaticResource SecondaryButton}"
+                                 Command="{Binding OpenGitHubCommand}"
+                                 AutomationProperties.Name="GitHubで見る"
+                                 HorizontalAlignment="Left"
+                                 Padding="20,10"/>
                     </StackPanel>
                 </Border>
             </StackPanel>

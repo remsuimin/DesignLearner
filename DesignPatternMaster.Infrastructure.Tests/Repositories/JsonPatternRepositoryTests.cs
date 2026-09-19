@@ -1,4 +1,5 @@
 using DesignPatternMaster.Core.Entities;
+using DesignPatternMaster.Core.Enums;
 using DesignPatternMaster.Infrastructure.Repositories;
 using FluentAssertions;
 using System.Text.Json;
@@ -32,24 +33,20 @@ namespace DesignPatternMaster.Infrastructure.Tests.Repositories
             // Arrange
             var testPatterns = new List<DesignPattern>
             {
-                new DesignPattern
-                {
-                    Id = "singleton",
-                    Name = "Singleton",
-                    Summary = "Test",
-                    Category = "Creational",
-                    Difficulty = "Beginner",
-                    ModernRelevance = "Test"
-                },
-                new DesignPattern
-                {
-                    Id = "factory",
-                    Name = "Factory",
-                    Summary = "Test",
-                    Category = "Creational",
-                    Difficulty = "Intermediate",
-                    ModernRelevance = "Test"
-                }
+                new DesignPattern(
+                    id: "singleton",
+                    name: "Singleton",
+                    summary: "Test",
+                    category: PatternCategory.Creational,
+                    difficulty: DifficultyLevel.Beginner,
+                    modernRelevance: "Test"),
+                new DesignPattern(
+                    id: "factory",
+                    name: "Factory",
+                    summary: "Test",
+                    category: PatternCategory.Creational,
+                    difficulty: DifficultyLevel.Intermediate,
+                    modernRelevance: "Test")
             };
 
             var json = JsonSerializer.Serialize(testPatterns);
@@ -87,15 +84,13 @@ namespace DesignPatternMaster.Infrastructure.Tests.Repositories
             // Arrange
             var testPatterns = new List<DesignPattern>
             {
-                new DesignPattern
-                {
-                    Id = "singleton",
-                    Name = "Singleton",
-                    Summary = "Test",
-                    Category = "Creational",
-                    Difficulty = "Beginner",
-                    ModernRelevance = "Test"
-                }
+                new DesignPattern(
+                    id: "singleton",
+                    name: "Singleton",
+                    summary: "Test",
+                    category: PatternCategory.Creational,
+                    difficulty: DifficultyLevel.Beginner,
+                    modernRelevance: "Test")
             };
 
             var json = JsonSerializer.Serialize(testPatterns);
@@ -118,15 +113,13 @@ namespace DesignPatternMaster.Infrastructure.Tests.Repositories
             // Arrange
             var testPatterns = new List<DesignPattern>
             {
-                new DesignPattern
-                {
-                    Id = "singleton",
-                    Name = "Singleton",
-                    Summary = "Test",
-                    Category = "Creational",
-                    Difficulty = "Beginner",
-                    ModernRelevance = "Test"
-                }
+                new DesignPattern(
+                    id: "singleton",
+                    name: "Singleton",
+                    summary: "Test",
+                    category: PatternCategory.Creational,
+                    difficulty: DifficultyLevel.Beginner,
+                    modernRelevance: "Test")
             };
 
             var json = JsonSerializer.Serialize(testPatterns);
@@ -147,15 +140,13 @@ namespace DesignPatternMaster.Infrastructure.Tests.Repositories
             // Arrange
             var testPatterns = new List<DesignPattern>
             {
-                new DesignPattern
-                {
-                    Id = "singleton",
-                    Name = "Singleton",
-                    Summary = "Test",
-                    Category = "Creational",
-                    Difficulty = "Beginner",
-                    ModernRelevance = "Test"
-                }
+                new DesignPattern(
+                    id: "singleton",
+                    name: "Singleton",
+                    summary: "Test",
+                    category: PatternCategory.Creational,
+                    difficulty: DifficultyLevel.Beginner,
+                    modernRelevance: "Test")
             };
 
             var json = JsonSerializer.Serialize(testPatterns);
@@ -181,30 +172,24 @@ namespace DesignPatternMaster.Infrastructure.Tests.Repositories
         public async Task GetAllPatternsAsync_ShouldDeserializeComplexPatterns()
         {
             // Arrange
-            var testPattern = new DesignPattern
-            {
-                Id = "singleton",
-                Name = "Singleton",
-                Summary = "Test",
-                Category = "Creational",
-                Difficulty = "Beginner",
-                ModernRelevance = "Test",
-                Sections = new List<Section>
+            var testPattern = new DesignPattern(
+                id: "singleton",
+                name: "Singleton",
+                summary: "Test",
+                category: PatternCategory.Creational,
+                difficulty: DifficultyLevel.Beginner,
+                modernRelevance: "Test",
+                sections: new List<Section>
                 {
-                    new Section
-                    {
-                        Title = "Introduction",
-                        Content = "Test content",
-                        CodeSample = new CodeSample
-                        {
-                            Language = "csharp",
-                            Code = "var x = 10;",
-                            Description = "Test"
-                        }
-                    }
+                    new Section(
+                        title: "Introduction",
+                        content: "Test content",
+                        codeSample: new CodeSample(
+                            language: "csharp",
+                            code: "var x = 10;",
+                            description: "Test"))
                 },
-                Tags = new List<string> { "design", "pattern" }
-            };
+                tags: new List<string> { "design", "pattern" });
 
             var json = JsonSerializer.Serialize(new List<DesignPattern> { testPattern });
             await File.WriteAllTextAsync(_testFilePath, json);
@@ -240,15 +225,13 @@ namespace DesignPatternMaster.Infrastructure.Tests.Repositories
             // Arrange
             var testPatterns = new List<DesignPattern>
             {
-                new DesignPattern
-                {
-                    Id = "singleton",
-                    Name = "Singleton",
-                    Summary = "Test",
-                    Category = "Creational",
-                    Difficulty = "Beginner",
-                    ModernRelevance = "Test"
-                }
+                new DesignPattern(
+                    id: "singleton",
+                    name: "Singleton",
+                    summary: "Test",
+                    category: PatternCategory.Creational,
+                    difficulty: DifficultyLevel.Beginner,
+                    modernRelevance: "Test")
             };
 
             var json = JsonSerializer.Serialize(testPatterns);
@@ -285,24 +268,20 @@ namespace DesignPatternMaster.Infrastructure.Tests.Repositories
             // Arrange
             var testPatterns = new List<DesignPattern>
             {
-                new DesignPattern
-                {
-                    Id = "test",
-                    Name = "First",
-                    Summary = "Test",
-                    Category = "Creational",
-                    Difficulty = "Beginner",
-                    ModernRelevance = "Test"
-                },
-                new DesignPattern
-                {
-                    Id = "test",
-                    Name = "Second",
-                    Summary = "Test",
-                    Category = "Creational",
-                    Difficulty = "Beginner",
-                    ModernRelevance = "Test"
-                }
+                new DesignPattern(
+                    id: "test",
+                    name: "First",
+                    summary: "Test",
+                    category: PatternCategory.Creational,
+                    difficulty: DifficultyLevel.Beginner,
+                    modernRelevance: "Test"),
+                new DesignPattern(
+                    id: "test",
+                    name: "Second",
+                    summary: "Test",
+                    category: PatternCategory.Creational,
+                    difficulty: DifficultyLevel.Beginner,
+                    modernRelevance: "Test")
             };
 
             var json = JsonSerializer.Serialize(testPatterns);
@@ -322,16 +301,14 @@ namespace DesignPatternMaster.Infrastructure.Tests.Repositories
         public async Task GetAllPatternsAsync_ShouldHandlePatternWithNullableFields()
         {
             // Arrange
-            var testPattern = new DesignPattern
-            {
-                Id = "test",
-                Name = "Test",
-                Summary = "Test",
-                Category = "Test",
-                Difficulty = "Test",
-                ModernRelevance = "Test",
-                IconPath = null
-            };
+            var testPattern = new DesignPattern(
+                id: "test",
+                name: "Test",
+                summary: "Test",
+                category: PatternCategory.Creational,
+                difficulty: DifficultyLevel.Beginner,
+                modernRelevance: "Test",
+                iconPath: null);
 
             var json = JsonSerializer.Serialize(new List<DesignPattern> { testPattern });
             await File.WriteAllTextAsync(_testFilePath, json);

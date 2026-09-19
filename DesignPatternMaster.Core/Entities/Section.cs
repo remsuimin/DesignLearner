@@ -1,10 +1,23 @@
-namespace DesignPatternMaster.Core.Entities
+namespace DesignPatternMaster.Core.Entities;
+
+/// <summary>パターン解説の1節。Markdown 本文＋任意のコード例・画像。</summary>
+public sealed class Section
 {
-    public class Section
+    public string Title { get; }
+    public string Content { get; }
+    public CodeSample? CodeSample { get; }
+    public string? ImagePath { get; }
+
+    public Section(string title, string content, CodeSample? codeSample = null, string? imagePath = null)
     {
-        public required string Title { get; set; }
-        public required string Content { get; set; } // Markdown supported
-        public CodeSample? CodeSample { get; set; }
-        public string? ImagePath { get; set; }
+        if (string.IsNullOrWhiteSpace(title))
+            throw new ArgumentException("Title must not be empty.", nameof(title));
+        if (string.IsNullOrWhiteSpace(content))
+            throw new ArgumentException("Content must not be empty.", nameof(content));
+
+        Title = title.Trim();
+        Content = content.Trim();
+        CodeSample = codeSample;
+        ImagePath = string.IsNullOrWhiteSpace(imagePath) ? null : imagePath.Trim();
     }
 }

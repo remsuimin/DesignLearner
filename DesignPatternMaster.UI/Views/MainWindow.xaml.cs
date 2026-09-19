@@ -1,133 +1,82 @@
+using DesignPatternMaster.UI.Services;
 using DesignPatternMaster.UI.ViewModels;
-using DesignPatternMaster.UI.Views.Pages;
-using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 using System.Windows;
-using System.Windows.Controls;
 
-namespace DesignPatternMaster.UI.Views
+namespace DesignPatternMaster.UI.Views;
+
+public sealed partial class MainWindow : Window
 {
-    public partial class MainWindow : Window
+    private readonly INavigationService _navigation;
+    private readonly ILogger<MainWindow> _logger;
+    private bool _initialized;
+
+    public MainWindow(
+        MainWindowViewModel viewModel,
+        INavigationService navigation,
+        ILogger<MainWindow> logger)
     {
-        public MainWindow(MainWindowViewModel viewModel)
+        ArgumentNullException.ThrowIfNull(viewModel);
+        ArgumentNullException.ThrowIfNull(navigation);
+        ArgumentNullException.ThrowIfNull(logger);
+        _navigation = navigation;
+        _logger = logger;
+
+        try
         {
-            try
+            DataContext = viewModel;
+            InitializeComponent();
+
+            Loaded += async (s, e) =>
             {
-                System.Diagnostics.Debug.WriteLine("Views.MainWindow constructor start");
-                DataContext = viewModel;
-                InitializeComponent();
-                
-                System.Diagnostics.Debug.WriteLine("MainWindow initialized");
-                System.Diagnostics.Debug.WriteLine("Views.MainWindow initialized");
-            
-                // Initial navigation to Dashboard - moved to Loaded event
-                Loaded += (s, e) =>
-                {
-                    System.Diagnostics.Debug.WriteLine("Views.MainWindow Loaded");
-                    NavigateToDashboard();
-                };
+                if (_initialized)
+                    return;
 
-                Closing += (s, e) => System.Diagnostics.Debug.WriteLine("Views.MainWindow Closing");
+                _initialized = true;
+                _navigation.Initialize(RootFrame);
+                await _navigation.NavigateToDashboardAsync();
+            };
 
-                Closed += (s, e) => System.Diagnostics.Debug.WriteLine("Views.MainWindow Closed");
-
-                StateChanged += MainWindow_StateChanged;
-            }
-            catch (Exception ex)
-            {
-                System.Diagnostics.Debug.WriteLine($"ERROR in MainWindow constructor: {ex.Message}");
-                MessageBox.Show($"Error initializing MainWindow: {ex.Message}\n\n{ex.StackTrace}", "Initialization Error", MessageBoxButton.OK, MessageBoxImage.Error);
-                throw;
-            }
+            StateChanged += MainWindow_StateChanged;
         }
-
-        private void MainWindow_StateChanged(object? sender, EventArgs e)
+        catch (Exception ex)
         {
-            if (WindowState == WindowState.Maximized)
-            {
-                MaximizeButton.Content = "❐"; // Restore icon
-            }
-            else
-            {
-                MaximizeButton.Content = "⬜"; // Maximize icon
-            }
+            _logger.LogCritical(ex, "Failed to initialize MainWindow.");
+            throw;
         }
+    }
 
-        public void Navigate(Type pageType, object? parameter = null)
+    private void MainWindow_StateChanged(object? sender, EventArgs e)
+    {
+        if (WindowState == WindowState.Maximized)
         {
-            try
-            {
-                System.Diagnostics.Debug.WriteLine($"Navigating to: {pageType.Name}");
-                Console.WriteLine($"Navigating to: {pageType.Name}");
-                
-                var page = App.ServiceProvider.GetRequiredService(pageType) as Page;
-                if (page != null)
-                {
-                    System.Diagnostics.Debug.WriteLine($"Page created: {page.GetType().Name}");
-                    Console.WriteLine($"Page created: {page.GetType().Name}");
-                    RootFrame.Navigate(page);
-                    
-                    // Load data if it's DashboardPage
-                    if (page is DashboardPage dashboardPage)
-                    {
-                        var vm = App.ServiceProvider.GetRequiredService<DashboardViewModel>();
-                        dashboardPage.DataContext = vm;
-                        System.Diagnostics.Debug.WriteLine("Loading dashboard data...");
-                        Console.WriteLine("Loading dashboard data...");
-                        _ = vm.LoadDataAsync();
-                    }
-                    else if (page is PatternDetailPage detailPage)
-                    {
-                        var vm = App.ServiceProvider.GetRequiredService<PatternDetailViewModel>();
-                        detailPage.DataContext = vm;
-                        
-                        if (parameter is string patternId)
-                        {
-                            System.Diagnostics.Debug.WriteLine($"Loading pattern detail for: {patternId}");
-                            _ = vm.LoadPatternAsync(patternId);
-                        }
-                    }
-                }
-                else
-                {
-                    System.Diagnostics.Debug.WriteLine("ERROR: Page is null!");
-                    Console.WriteLine("ERROR: Page is null!");
-                }
-            }
-            catch (Exception ex)
-            {
-                System.Diagnostics.Debug.WriteLine($"ERROR in Navigate: {ex.Message}");
-                Console.WriteLine($"ERROR in Navigate: {ex.Message}");
-                MessageBox.Show($"Navigation error: {ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
-            }
+            MaximizeButton.Content = "❐"; // Restore icon
         }
+        else
+        {
+            MaximizeButton.Content = "⬜"; // Maximize icon
+        }
+    }
 
-        private void NavigateToDashboard()
-        {
-            System.Diagnostics.Debug.WriteLine("NavigateToDashboard called");
-            Console.WriteLine("NavigateToDashboard called");
-            Navigate(typeof(DashboardPage));
-        }
+    private void MinimizeButton_Click(object sender, RoutedEventArgs e)
+    {
+        WindowState = WindowState.Minimized;
+    }
 
-        private void MinimizeButton_Click(object sender, RoutedEventArgs e)
+    private void MaximizeButton_Click(object sender, RoutedEventArgs e)
+    {
+        if (WindowState == WindowState.Maximized)
         {
-            WindowState = WindowState.Minimized;
+            WindowState = WindowState.Normal;
         }
+        else
+        {
+            WindowState = WindowState.Maximized;
+        }
+    }
 
-        private void MaximizeButton_Click(object sender, RoutedEventArgs e)
-        {
-            if (WindowState == WindowState.Maximized)
-            {
-                WindowState = WindowState.Normal;
-            }
-            else
-            {
-                WindowState = WindowState.Maximized;
-            }
-        }
-
-        private void CloseButton_Click(object sender, RoutedEventArgs e)
-        {
-            Close();
-        }
+    private void CloseButton_Click(object sender, RoutedEventArgs e)
+    {
+        Close();
     }
 }

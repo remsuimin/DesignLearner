@@ -1,26 +1,37 @@
 using CommunityToolkit.Mvvm.ComponentModel;
-using CommunityToolkit.Mvvm.Messaging;
 using DesignPatternMaster.Core.Entities;
 using DesignPatternMaster.UseCases.Queries;
-using System.Threading.Tasks;
+using Microsoft.Extensions.Logging;
 
-namespace DesignPatternMaster.UI.ViewModels
+namespace DesignPatternMaster.UI.ViewModels;
+
+public sealed partial class PatternDetailViewModel : ObservableObject
 {
-    public partial class PatternDetailViewModel : ObservableObject
+    private readonly IGetPatternDetailQuery _query;
+    private readonly ILogger<PatternDetailViewModel> _logger;
+
+    [ObservableProperty]
+    private DesignPattern? _selectedPattern;
+
+    public PatternDetailViewModel(IGetPatternDetailQuery query, ILogger<PatternDetailViewModel> logger)
     {
-        private readonly GetPatternDetailQuery _getPatternDetailQuery;
+        ArgumentNullException.ThrowIfNull(query);
+        ArgumentNullException.ThrowIfNull(logger);
+        _query = query;
+        _logger = logger;
+    }
 
-        [ObservableProperty]
-        private DesignPattern? _selectedPattern;
-
-        public PatternDetailViewModel(GetPatternDetailQuery getPatternDetailQuery)
+    public async Task LoadPatternAsync(string id, CancellationToken cancellationToken = default)
+    {
+        try
         {
-            _getPatternDetailQuery = getPatternDetailQuery;
+            SelectedPattern = await _query.ExecuteAsync(id, cancellationToken);
+            _logger.LogInformation("Pattern loaded: {PatternId}", id);
         }
-
-        public async Task LoadPatternAsync(string id)
+        catch (Exception ex)
         {
-            SelectedPattern = await _getPatternDetailQuery.ExecuteAsync(id);
+            _logger.LogError(ex, "Failed to load pattern: {PatternId}", id);
+            throw;
         }
     }
 }

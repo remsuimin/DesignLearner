@@ -1,123 +1,134 @@
 ﻿using DesignPatternMaster.Core.Interfaces;
 using DesignPatternMaster.Infrastructure.Repositories;
-using DesignPatternMaster.UseCases.Queries;
+using DesignPatternMaster.UI.Services;
 using DesignPatternMaster.UI.ViewModels;
-using DesignPatternMaster.UI.Views;
 using DesignPatternMaster.UI.Views.Pages;
+using DesignPatternMaster.UseCases.Queries;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 using System.Windows;
-using System.IO;
 
-namespace DesignPatternMaster.UI
+namespace DesignPatternMaster.UI;
+
+public partial class App : Application
 {
-    public partial class App : Application
+    private const int SplashScreenDurationMs = 1000;
+
+    private IServiceProvider? _services;
+
+    protected override void OnStartup(StartupEventArgs e)
     {
-        private ServiceProvider? _serviceProvider;
+        base.OnStartup(e);
+        RegisterExceptionHandlers();
+        _ = RunStartupAsync();
+    }
 
-        public App()
+    private async Task RunStartupAsync()
+    {
+        try
         {
-            Log("App constructor called");
+            // Prevent automatic shutdown when Splash Screen closes
+            ShutdownMode = ShutdownMode.OnExplicitShutdown;
+
+            // Show Splash Screen
+            var splashScreen = new Views.SplashScreen();
+            splashScreen.Show();
+
+            var services = BuildServices();
+#if DEBUG
+            _services = services.BuildServiceProvider(new ServiceProviderOptions
+            {
+                ValidateScopes = true,
+                ValidateOnBuild = true
+            });
+#else
+            _services = services.BuildServiceProvider();
+#endif
+            var logger = _services.GetRequiredService<ILogger<App>>();
+            logger.LogInformation("Service provider built.");
+
+            await Task.Delay(SplashScreenDurationMs);
+            splashScreen.Close();
+
+            // Create and show main window (use the Views.MainWindow)
+            var mainWindow = _services.GetRequiredService<Views.MainWindow>();
+
+            // Set as main window and restore shutdown mode
+            MainWindow = mainWindow;
+            ShutdownMode = ShutdownMode.OnMainWindowClose;
+
+            mainWindow.Show();
+            logger.LogInformation("MainWindow shown.");
         }
-
-        protected override async void OnStartup(StartupEventArgs e)
+        catch (Exception ex)
         {
-            try
-            {
-                Log("OnStartup called");
-
-                // Prevent automatic shutdown when Splash Screen closes
-                ShutdownMode = ShutdownMode.OnExplicitShutdown;
-
-                // Show Splash Screen
-                var splashScreen = new DesignPatternMaster.UI.Views.SplashScreen();
-                splashScreen.Show();
-
-                // Wait for 1 second
-                await Task.Delay(1000);
-
-                splashScreen.Close();
-                
-                // Build DI container
-                var services = new ServiceCollection();
-                
-                // Core Services
-                services.AddSingleton<IPatternRepository, JsonPatternRepository>();
-                
-                // Use Cases
-                services.AddSingleton<GetPatternListQuery>();
-                services.AddSingleton<GetPatternDetailQuery>();
-                
-                // ViewModels
-                services.AddSingleton<MainWindowViewModel>();
-                services.AddSingleton<DashboardViewModel>();
-                services.AddSingleton<PatternDetailViewModel>();
-                services.AddSingleton<SettingsViewModel>();
-                
-                // Views
-                // Register the MainWindow from the Views namespace (full UI layout)
-                services.AddSingleton<Views.MainWindow>();
-                services.AddTransient<DashboardPage>();
-                services.AddTransient<PatternDetailPage>();
-                services.AddTransient<SettingsPage>();
-                
-                _serviceProvider = services.BuildServiceProvider();
-                Log("Service provider built");
-                
-                // Create and show main window (use the Views.MainWindow)
-                var mainWindow = _serviceProvider.GetRequiredService<Views.MainWindow>();
-                Log("MainWindow retrieved from DI");
-                
-                // ensure any UI thread unhandled exceptions are surfaced
-                DispatcherUnhandledException += (sender, args) =>
-                {
-                    System.Diagnostics.Debug.WriteLine($"Unhandled UI exception: {args.Exception.Message}");
-                    MessageBox.Show($"Unhandled exception: {args.Exception.Message}\n\n{args.Exception.StackTrace}", "Unhandled Exception", MessageBoxButton.OK, MessageBoxImage.Error);
-                    args.Handled = true;
-                };
-
-                // Set as main window and restore shutdown mode
-                Application.Current.MainWindow = mainWindow;
-                ShutdownMode = ShutdownMode.OnMainWindowClose;
-                
-                mainWindow.Show();
-                Log("MainWindow.Show() called");
-                
-                base.OnStartup(e);
-            }
-            catch (Exception ex)
-            {
-                Log($"ERROR in OnStartup: {ex.Message}");
-                MessageBox.Show($"Error during startup: {ex.Message}\n\n{ex.StackTrace}", 
-                    "Startup Error", 
-                    MessageBoxButton.OK, 
-                    MessageBoxImage.Error);
-                Shutdown();
-            }
-        }
-
-        protected override void OnExit(ExitEventArgs e)
-        {
-                Console.WriteLine("OnExit called");
-                Log("OnExit called");
-            _serviceProvider?.Dispose();
-            base.OnExit(e);
-        }
-
-        public static IServiceProvider ServiceProvider => ((App)Current)._serviceProvider 
-            ?? throw new InvalidOperationException("Service provider not initialized");
-
-        private static void Log(string message)
-        {
-            try
-            {
-                var logPath = Path.Combine(Path.GetTempPath(), "DesignPatternMaster.log");
-                File.AppendAllText(logPath, $"[{DateTime.Now:yyyy-MM-dd HH:mm:ss.fff}] {message}\r\n");
-            }
-            catch
-            {
-                // ignore logging errors
-            }
+            MessageBox.Show($"Error during startup: {ex.Message}\n\n{ex.StackTrace}",
+                "Startup Error",
+                MessageBoxButton.OK,
+                MessageBoxImage.Error);
+            Shutdown();
         }
     }
-}
 
+    internal static ServiceCollection BuildServices()
+    {
+        var services = new ServiceCollection();
+        services.AddLogging(builder => builder.AddDebug());
+
+        // Core Services
+        services.AddSingleton<IPatternRepository, JsonPatternRepository>();
+
+        // Use Cases
+        services.AddTransient<IGetPatternListQuery, GetPatternListQuery>();
+        services.AddTransient<IGetPatternDetailQuery, GetPatternDetailQuery>();
+
+        // UI Services
+        services.AddSingleton<INavigationService, NavigationService>();
+        services.AddSingleton<IDialogService, DialogService>();
+        services.AddSingleton<IUrlLauncher, UrlLauncher>();
+
+        // ViewModels
+        services.AddSingleton<MainWindowViewModel>();
+        services.AddTransient<DashboardViewModel>();
+        services.AddTransient<PatternDetailViewModel>();
+        services.AddSingleton<SettingsViewModel>();
+
+        // Views
+        // Register the MainWindow from the Views namespace (full UI layout)
+        services.AddSingleton<Views.MainWindow>();
+        services.AddTransient<DashboardPage>();
+        services.AddTransient<PatternDetailPage>();
+        services.AddTransient<SettingsPage>();
+
+        return services;
+    }
+
+    private void RegisterExceptionHandlers()
+    {
+        // Registered before DI construction so that startup failures are also observed.
+        // Continuing after Handled=true may resume in a corrupted state; recorded as policy.
+        DispatcherUnhandledException += (sender, args) =>
+        {
+            System.Diagnostics.Debug.WriteLine($"Unhandled UI exception: {args.Exception.Message}");
+            MessageBox.Show($"Unhandled exception: {args.Exception.Message}\n\n{args.Exception.StackTrace}", "Unhandled Exception", MessageBoxButton.OK, MessageBoxImage.Error);
+            args.Handled = true;
+        };
+        AppDomain.CurrentDomain.UnhandledException += (sender, args) =>
+        {
+            var ex = args.ExceptionObject as Exception;
+            System.Diagnostics.Debug.WriteLine($"Unhandled domain exception: {ex?.Message}");
+            MessageBox.Show($"Fatal error: {ex?.Message}", "Fatal Error", MessageBoxButton.OK, MessageBoxImage.Error);
+        };
+        TaskScheduler.UnobservedTaskException += (sender, args) =>
+        {
+            System.Diagnostics.Debug.WriteLine($"Unobserved task exception: {args.Exception.Message}");
+            args.SetObserved();
+        };
+    }
+
+    protected override void OnExit(ExitEventArgs e)
+    {
+        (_services as IDisposable)?.Dispose();
+        base.OnExit(e);
+    }
+}

@@ -13,7 +13,7 @@ namespace DesignPatternMaster.UI.Views.Pages
             DataContext = viewModel;  // Fixed: bind to ViewModel
             InitializeComponent();
             
-            // Data is loaded by MainWindow.Navigate when the DashboardPage is created.
+            // Data is loaded by INavigationService when the DashboardPage is navigated to.
         }
     }
 }

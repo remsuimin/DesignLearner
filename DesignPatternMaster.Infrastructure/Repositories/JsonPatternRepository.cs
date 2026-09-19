@@ -8,179 +8,120 @@ using System.Threading.Tasks;
 using DesignPatternMaster.Core.Entities;
 using DesignPatternMaster.Core.Enums;
 using DesignPatternMaster.Core.Interfaces;
+using Microsoft.Extensions.Logging;
 
-namespace DesignPatternMaster.Infrastructure.Repositories
+namespace DesignPatternMaster.Infrastructure.Repositories;
+
+/// <summary>JSON ファイル永続化のリポジトリ実装。読取専用・スレッドセーフ。リロード監視は行わない（起動時ロード＋キャッシュ維持）。</summary>
+public sealed class JsonPatternRepository : IPatternRepository
 {
-    public class JsonPatternRepository : IPatternRepository
+    private static readonly JsonSerializerOptions JsonOptions = new()
     {
-    private string _filePath;
+        PropertyNameCaseInsensitive = true,
+        Converters = { new JsonStringEnumConverter() }
+    };
+
+    private readonly string _filePath;
+    private readonly ILogger<JsonPatternRepository>? _logger;
+    private readonly SemaphoreSlim _loadLock = new(1, 1);
     private List<DesignPattern>? _cachedPatterns;
 
-        public JsonPatternRepository(string filePath = "Data/patterns.json")
+    public JsonPatternRepository(string filePath = "Data/patterns.json", ILogger<JsonPatternRepository>? logger = null)
+    {
+        if (string.IsNullOrWhiteSpace(filePath))
+            throw new ArgumentException("File path must not be empty.", nameof(filePath));
+
+        _filePath = filePath;
+        _logger = logger;
+    }
+
+    private string ResolvePath()
+    {
+        if (Path.IsPathRooted(_filePath))
+            return Path.GetFullPath(_filePath);
+
+        return Path.GetFullPath(Path.Combine(AppContext.BaseDirectory, _filePath));
+    }
+
+    private async Task EnsureLoadedAsync(CancellationToken cancellationToken)
+    {
+        if (_cachedPatterns is not null)
+            return;
+
+        await _loadLock.WaitAsync(cancellationToken);
+        try
         {
-            _filePath = filePath;
-        }
+            if (_cachedPatterns is not null)
+                return;
 
-        // Sanitize JSON string by escaping CR/LF/TAB inside string literals.
-        private static string SanitizeJsonString(string json)
-        {
-            var sb = new System.Text.StringBuilder(json.Length);
-            bool inString = false;
-            bool escape = false;
-
-            foreach (char ch in json)
-            {
-                if (escape)
-                {
-                    sb.Append(ch);
-                    escape = false;
-                    continue;
-                }
-
-                if (ch == '\\')
-                {
-                    sb.Append(ch);
-                    escape = true;
-                    continue;
-                }
-
-                if (ch == '"')
-                {
-                    sb.Append(ch);
-                    inString = !inString;
-                    continue;
-                }
-
-                if (inString)
-                {
-                    if (ch == '\r')
-                    {
-                        sb.Append("\\r");
-                        continue;
-                    }
-                    if (ch == '\n')
-                    {
-                        sb.Append("\\n");
-                        continue;
-                    }
-                    if (ch == '\t')
-                    {
-                        sb.Append("\\t");
-                        continue;
-                    }
-                }
-
-                sb.Append(ch);
-            }
-
-            return sb.ToString();
-        }
-
-        private async Task EnsureLoadedAsync()
-        {
-            if (_cachedPatterns != null) return;
-
-            if (!File.Exists(_filePath))
-            {
-                // Fallback for development/testing if file not found in relative path
-                var baseDir = AppDomain.CurrentDomain.BaseDirectory;
-                var absolutePath = Path.Combine(baseDir, _filePath);
-                
-                if (!File.Exists(absolutePath))
-                {
-                    // Try looking in the project structure if running from source
-                    // This is a bit hacky but helps in dev environment
-                    var baseDirParent = Directory.GetParent(baseDir);
-                    var projectPath = string.Empty;
-                    if (baseDirParent != null && baseDirParent.Parent != null && baseDirParent.Parent.Parent != null)
-                    {
-                        projectPath = Path.Combine(baseDirParent.Parent.Parent.FullName, "DesignPatternMaster.Infrastructure", _filePath);
-                    }
-                    if (!string.IsNullOrEmpty(projectPath) && File.Exists(projectPath))
-                    {
-                        absolutePath = projectPath;
-                    }
-                    else
-                    {
-                         _cachedPatterns = new List<DesignPattern>();
-                         return;
-                    }
-                }
-                _filePath = absolutePath;
-            }
-
-            // Read the JSON file into a string first. If the file contains raw control characters
-            // inside string literals (e.g., unescaped CR), JsonSerializer might throw. We try a direct
-            // deserialize first; if that fails, sanitize string literals to escape control chars, then retry.
-            var jsonText = await File.ReadAllTextAsync(_filePath);
+            var resolvedPath = ResolvePath();
+            string jsonText;
             try
             {
-                _cachedPatterns = JsonSerializer.Deserialize<List<DesignPattern>>(jsonText, new JsonSerializerOptions
-                {
-                    PropertyNameCaseInsensitive = true,
-                    Converters = { new JsonStringEnumConverter() }
-                });
+                jsonText = await File.ReadAllTextAsync(resolvedPath, cancellationToken);
             }
-            catch (JsonException)
+            catch (FileNotFoundException ex)
             {
-                var sanitized = SanitizeJsonString(jsonText);
-                if (!string.Equals(sanitized, jsonText, StringComparison.Ordinal))
-                {
-                    try
-                    {
-                        var backup = _filePath + ".bak";
-                        File.WriteAllText(backup, jsonText);
-                        File.WriteAllText(_filePath, sanitized);
-                    }
-                    catch
-                    {
-                        // ignore write-back errors; we still try to use the sanitized content in-memory
-                    }
-                }
-                _cachedPatterns = JsonSerializer.Deserialize<List<DesignPattern>>(sanitized, new JsonSerializerOptions
-                {
-                    PropertyNameCaseInsensitive = true,
-                    Converters = { new JsonStringEnumConverter() }
-                });
+                _logger?.LogError(ex, "Pattern data file not found: {Path}", resolvedPath);
+                throw new FileNotFoundException($"Pattern data file not found: {resolvedPath}", resolvedPath, ex);
             }
-            _cachedPatterns = _cachedPatterns ?? new List<DesignPattern>();
-        }
 
-        public async Task<IReadOnlyList<DesignPattern>> GetAllPatternsAsync(CancellationToken cancellationToken = default)
+            cancellationToken.ThrowIfCancellationRequested();
+
+            List<DesignPattern>? loaded;
+            try
+            {
+                loaded = JsonSerializer.Deserialize<List<DesignPattern>>(jsonText, JsonOptions);
+            }
+            catch (JsonException ex)
+            {
+                _logger?.LogError(ex, "Pattern data file is corrupted: {Path}", resolvedPath);
+                throw;
+            }
+
+            _cachedPatterns = loaded ?? new List<DesignPattern>();
+            _logger?.LogInformation("Loaded {Count} design patterns from {Path}.", _cachedPatterns.Count, resolvedPath);
+        }
+        finally
         {
-            await EnsureLoadedAsync();
-            return _cachedPatterns?.ToList() ?? new List<DesignPattern>();
+            _loadLock.Release();
         }
+    }
 
-        public async Task<DesignPattern?> GetPatternByIdAsync(string id, CancellationToken cancellationToken = default)
-        {
-            await EnsureLoadedAsync();
-            var normalized = id?.Trim() ?? string.Empty;
-            return _cachedPatterns?.FirstOrDefault(p => p.Id.Equals(normalized, StringComparison.OrdinalIgnoreCase));
-        }
+    public async Task<IReadOnlyList<DesignPattern>> GetAllPatternsAsync(CancellationToken cancellationToken = default)
+    {
+        await EnsureLoadedAsync(cancellationToken);
+        return _cachedPatterns?.ToList() ?? new List<DesignPattern>();
+    }
 
-        public async Task<IReadOnlyList<DesignPattern>> GetByCategoryAsync(PatternCategory category, CancellationToken cancellationToken = default)
-        {
-            var all = await GetAllPatternsAsync(cancellationToken);
-            return all.Where(p => p.Category == category).ToList();
-        }
+    public async Task<DesignPattern?> GetPatternByIdAsync(string id, CancellationToken cancellationToken = default)
+    {
+        await EnsureLoadedAsync(cancellationToken);
+        var normalized = id?.Trim() ?? string.Empty;
+        return _cachedPatterns?.FirstOrDefault(p => p.Id.Equals(normalized, StringComparison.OrdinalIgnoreCase));
+    }
 
-        public async Task<IReadOnlyList<DesignPattern>> SearchAsync(string keyword, CancellationToken cancellationToken = default)
-        {
-            if (string.IsNullOrWhiteSpace(keyword))
-                return new List<DesignPattern>();
+    public async Task<IReadOnlyList<DesignPattern>> GetByCategoryAsync(PatternCategory category, CancellationToken cancellationToken = default)
+    {
+        var all = await GetAllPatternsAsync(cancellationToken);
+        return all.Where(p => p.Category == category).ToList();
+    }
 
-            var all = await GetAllPatternsAsync(cancellationToken);
-            return all.Where(p =>
-                p.Name.Contains(keyword, StringComparison.OrdinalIgnoreCase) ||
-                p.Summary.Contains(keyword, StringComparison.OrdinalIgnoreCase) ||
-                p.Tags.Any(t => t.Contains(keyword, StringComparison.OrdinalIgnoreCase))).ToList();
-        }
+    public async Task<IReadOnlyList<DesignPattern>> SearchAsync(string keyword, CancellationToken cancellationToken = default)
+    {
+        if (string.IsNullOrWhiteSpace(keyword))
+            return new List<DesignPattern>();
 
-        public async Task<int> CountAsync(CancellationToken cancellationToken = default)
-        {
-            var all = await GetAllPatternsAsync(cancellationToken);
-            return all.Count;
-        }
+        var all = await GetAllPatternsAsync(cancellationToken);
+        return all.Where(p =>
+            p.Name.Contains(keyword, StringComparison.OrdinalIgnoreCase) ||
+            p.Summary.Contains(keyword, StringComparison.OrdinalIgnoreCase) ||
+            p.Tags.Any(t => t.Contains(keyword, StringComparison.OrdinalIgnoreCase))).ToList();
+    }
+
+    public async Task<int> CountAsync(CancellationToken cancellationToken = default)
+    {
+        var all = await GetAllPatternsAsync(cancellationToken);
+        return all.Count;
     }
 }

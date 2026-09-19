@@ -3,3 +3,14 @@ obj/
 .vs/
 *.user
 *.suo
+# Build/test outputs that must never be tracked
+**/TestResults/
+coverage-report/
+*.bak
+*.trx
+*.coverage
+*.coveragexml
+# Local working notes (per-phase work plans etc.)
+docs/
+.vscode/
+*.orig

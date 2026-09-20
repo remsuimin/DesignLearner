@@ -14,6 +14,7 @@ using Microsoft.Extensions.Logging.Abstractions;
 namespace DesignPatternMaster.Infrastructure.Repositories;
 
 /// <summary>JSON ファイル永続化のリポジトリ実装。読取専用・スレッドセーフ。リロード監視は行わない（起動時ロード＋キャッシュ維持）。</summary>
+/// <remarks>スキーマ契約：JSON に Tags・IconPath が欠落した場合は空リスト・null を既定値とする（任意項目。必須化はしない）。</remarks>
 public sealed partial class JsonPatternRepository : IPatternRepository, IDisposable
 {
     private static readonly JsonSerializerOptions JsonOptions = new()
@@ -55,6 +56,11 @@ public sealed partial class JsonPatternRepository : IPatternRepository, IDisposa
     [LoggerMessage(EventId = 3, Level = LogLevel.Information, Message = "Loaded {Count} design patterns from {Path}.")]
     private partial void LogLoaded(int count, string path);
 
+    /// <summary>
+    /// パスを決定論的に解決する。相対パスは AppContext.BaseDirectory 基準、絶対パスは正規化のみで通過させる。
+    /// サンドボックス化（許可ディレクトリ検証）は行わない。パス入力元はコード（DI・テスト）であり
+    /// ユーザー入力ではないため。テスト用任意パス指定は仕様として維持する。
+    /// </summary>
     private string ResolvePath()
     {
         if (Path.IsPathRooted(_filePath))

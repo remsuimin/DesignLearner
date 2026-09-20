@@ -1,5 +1,5 @@
-using DesignPatternMaster.UI.ViewModels;
 using System.Windows.Controls;
+using DesignPatternMaster.UI.ViewModels;
 
 namespace DesignPatternMaster.UI.Views.Pages
 {

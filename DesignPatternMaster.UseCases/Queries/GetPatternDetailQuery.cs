@@ -5,7 +5,7 @@ using Microsoft.Extensions.Logging;
 
 namespace DesignPatternMaster.UseCases.Queries;
 
-public sealed class GetPatternDetailQuery : IGetPatternDetailQuery
+public sealed partial class GetPatternDetailQuery : IGetPatternDetailQuery
 {
     private readonly IPatternRepository _repository;
     private readonly ILogger<GetPatternDetailQuery> _logger;
@@ -27,10 +27,13 @@ public sealed class GetPatternDetailQuery : IGetPatternDetailQuery
         var pattern = await _repository.GetPatternByIdAsync(normalized, cancellationToken);
         if (pattern is null)
         {
-            _logger.LogWarning("Design pattern not found: {PatternId}", normalized);
+            LogPatternNotFound(_logger, normalized);
             throw new PatternNotFoundException(normalized);
         }
 
         return pattern;
     }
+
+    [LoggerMessage(EventId = 1, Level = LogLevel.Warning, Message = "Design pattern not found: {PatternId}")]
+    private static partial void LogPatternNotFound(ILogger logger, string patternId);
 }

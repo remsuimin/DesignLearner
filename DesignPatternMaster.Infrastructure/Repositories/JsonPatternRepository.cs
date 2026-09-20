@@ -9,11 +9,12 @@ using DesignPatternMaster.Core.Entities;
 using DesignPatternMaster.Core.Enums;
 using DesignPatternMaster.Core.Interfaces;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Logging.Abstractions;
 
 namespace DesignPatternMaster.Infrastructure.Repositories;
 
 /// <summary>JSON ファイル永続化のリポジトリ実装。読取専用・スレッドセーフ。リロード監視は行わない（起動時ロード＋キャッシュ維持）。</summary>
-public sealed class JsonPatternRepository : IPatternRepository
+public sealed partial class JsonPatternRepository : IPatternRepository, IDisposable
 {
     private static readonly JsonSerializerOptions JsonOptions = new()
     {
@@ -22,9 +23,10 @@ public sealed class JsonPatternRepository : IPatternRepository
     };
 
     private readonly string _filePath;
-    private readonly ILogger<JsonPatternRepository>? _logger;
+    private readonly ILogger<JsonPatternRepository> _logger;
     private readonly SemaphoreSlim _loadLock = new(1, 1);
     private List<DesignPattern>? _cachedPatterns;
+    private bool _disposed;
 
     public JsonPatternRepository(string filePath = "Data/patterns.json", ILogger<JsonPatternRepository>? logger = null)
     {
@@ -32,8 +34,26 @@ public sealed class JsonPatternRepository : IPatternRepository
             throw new ArgumentException("File path must not be empty.", nameof(filePath));
 
         _filePath = filePath;
-        _logger = logger;
+        _logger = logger ?? NullLogger<JsonPatternRepository>.Instance;
     }
+
+    public void Dispose()
+    {
+        if (_disposed)
+            return;
+
+        _disposed = true;
+        _loadLock.Dispose();
+    }
+
+    [LoggerMessage(EventId = 1, Level = LogLevel.Error, Message = "Pattern data file not found: {Path}")]
+    private partial void LogFileNotFound(Exception exception, string path);
+
+    [LoggerMessage(EventId = 2, Level = LogLevel.Error, Message = "Pattern data file is corrupted: {Path}")]
+    private partial void LogFileCorrupted(Exception exception, string path);
+
+    [LoggerMessage(EventId = 3, Level = LogLevel.Information, Message = "Loaded {Count} design patterns from {Path}.")]
+    private partial void LogLoaded(int count, string path);
 
     private string ResolvePath()
     {
@@ -62,7 +82,7 @@ public sealed class JsonPatternRepository : IPatternRepository
             }
             catch (FileNotFoundException ex)
             {
-                _logger?.LogError(ex, "Pattern data file not found: {Path}", resolvedPath);
+                LogFileNotFound(ex, resolvedPath);
                 throw new FileNotFoundException($"Pattern data file not found: {resolvedPath}", resolvedPath, ex);
             }
 
@@ -75,12 +95,12 @@ public sealed class JsonPatternRepository : IPatternRepository
             }
             catch (JsonException ex)
             {
-                _logger?.LogError(ex, "Pattern data file is corrupted: {Path}", resolvedPath);
+                LogFileCorrupted(ex, resolvedPath);
                 throw;
             }
 
             _cachedPatterns = loaded ?? new List<DesignPattern>();
-            _logger?.LogInformation("Loaded {Count} design patterns from {Path}.", _cachedPatterns.Count, resolvedPath);
+            LogLoaded(_cachedPatterns.Count, resolvedPath);
         }
         finally
         {

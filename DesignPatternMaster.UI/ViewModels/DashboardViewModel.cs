@@ -1,10 +1,10 @@
+using System.Collections.ObjectModel;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using DesignPatternMaster.Core.Entities;
 using DesignPatternMaster.UI.Services;
 using DesignPatternMaster.UseCases.Queries;
 using Microsoft.Extensions.Logging;
-using System.Collections.ObjectModel;
 
 namespace DesignPatternMaster.UI.ViewModels;
 
@@ -41,11 +41,11 @@ public sealed partial class DashboardViewModel : ObservableObject
                 Patterns.Add(pattern);
             }
 
-            _logger.LogInformation("Dashboard patterns loaded: {Count}", Patterns.Count);
+            LogDashboardPatternsLoaded(_logger, Patterns.Count);
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Failed to load dashboard patterns.");
+            LogFailedToLoadDashboardPatterns(_logger, ex);
             throw;
         }
     }
@@ -58,4 +58,10 @@ public sealed partial class DashboardViewModel : ObservableObject
 
         await _navigation.NavigateToPatternDetailAsync(pattern.Id);
     }
+
+    [LoggerMessage(EventId = 1, Level = LogLevel.Information, Message = "Dashboard patterns loaded: {Count}")]
+    private static partial void LogDashboardPatternsLoaded(ILogger logger, int count);
+
+    [LoggerMessage(EventId = 2, Level = LogLevel.Error, Message = "Failed to load dashboard patterns.")]
+    private static partial void LogFailedToLoadDashboardPatterns(ILogger logger, Exception ex);
 }

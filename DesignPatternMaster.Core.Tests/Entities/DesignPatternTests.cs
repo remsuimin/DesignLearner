@@ -7,6 +7,8 @@ namespace DesignPatternMaster.Core.Tests.Entities
 {
     public class DesignPatternTests
     {
+        private static readonly string[] s_expectedTags = { "design", "pattern" };
+
         [Fact]
         public void DesignPattern_ShouldInitializeWithRequiredProperties()
         {
@@ -92,7 +94,7 @@ namespace DesignPatternMaster.Core.Tests.Entities
 
             // Assert
             pattern.Tags.Should().HaveCount(2);
-            pattern.Tags.Should().Contain(new[] { "design", "pattern" });
+            pattern.Tags.Should().Contain(s_expectedTags);
         }
 
         [Fact]

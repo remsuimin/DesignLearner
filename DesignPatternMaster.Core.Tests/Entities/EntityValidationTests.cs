@@ -22,7 +22,7 @@ namespace DesignPatternMaster.Core.Tests.Entities
                 difficulty: DifficultyLevel.Beginner,
                 modernRelevance: "Test");
 
-            act.Should().Throw<ArgumentException>().WithParameterName("id");
+            act.Should().Throw<ArgumentException>().WithParameterName(nameof(id));
         }
 
         [Theory]
@@ -39,7 +39,7 @@ namespace DesignPatternMaster.Core.Tests.Entities
                 difficulty: DifficultyLevel.Beginner,
                 modernRelevance: "Test");
 
-            act.Should().Throw<ArgumentException>().WithParameterName("name");
+            act.Should().Throw<ArgumentException>().WithParameterName(nameof(name));
         }
 
         [Theory]
@@ -56,7 +56,7 @@ namespace DesignPatternMaster.Core.Tests.Entities
                 difficulty: DifficultyLevel.Beginner,
                 modernRelevance: "Test");
 
-            act.Should().Throw<ArgumentException>().WithParameterName("summary");
+            act.Should().Throw<ArgumentException>().WithParameterName(nameof(summary));
         }
 
         // Section
@@ -67,7 +67,7 @@ namespace DesignPatternMaster.Core.Tests.Entities
         public void Section_ShouldThrow_WhenTitleIsEmptyOrWhitespace(string title)
         {
             var act = () => new Section(title: title, content: "content");
-            act.Should().Throw<ArgumentException>().WithParameterName("title");
+            act.Should().Throw<ArgumentException>().WithParameterName(nameof(title));
         }
 
         [Theory]
@@ -77,7 +77,7 @@ namespace DesignPatternMaster.Core.Tests.Entities
         public void Section_ShouldThrow_WhenContentIsEmptyOrWhitespace(string content)
         {
             var act = () => new Section(title: "Title", content: content);
-            act.Should().Throw<ArgumentException>().WithParameterName("content");
+            act.Should().Throw<ArgumentException>().WithParameterName(nameof(content));
         }
 
         // CodeSample
@@ -88,7 +88,7 @@ namespace DesignPatternMaster.Core.Tests.Entities
         public void CodeSample_ShouldThrow_WhenLanguageIsEmptyOrWhitespace(string language)
         {
             var act = () => new CodeSample(language: language, code: "var x = 1;", description: "test");
-            act.Should().Throw<ArgumentException>().WithParameterName("language");
+            act.Should().Throw<ArgumentException>().WithParameterName(nameof(language));
         }
 
         [Theory]
@@ -98,7 +98,7 @@ namespace DesignPatternMaster.Core.Tests.Entities
         public void CodeSample_ShouldThrow_WhenCodeIsEmptyOrWhitespace(string code)
         {
             var act = () => new CodeSample(language: "csharp", code: code, description: "test");
-            act.Should().Throw<ArgumentException>().WithParameterName("code");
+            act.Should().Throw<ArgumentException>().WithParameterName(nameof(code));
         }
 
         [Fact]
@@ -131,7 +131,7 @@ namespace DesignPatternMaster.Core.Tests.Entities
                 modernRelevance: "Test");
 
             var act = () => pattern.AddTag(tag);
-            act.Should().Throw<ArgumentException>().WithParameterName("tag");
+            act.Should().Throw<ArgumentException>().WithParameterName(nameof(tag));
         }
 
         [Fact]

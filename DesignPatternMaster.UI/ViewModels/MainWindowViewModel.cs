@@ -33,8 +33,11 @@ public sealed partial class MainWindowViewModel : ObservableObject
                 await _navigation.NavigateToSettingsAsync();
                 break;
             default:
-                _logger.LogWarning("Unknown page requested: {PageName}", pageName);
+                LogUnknownPageRequested(_logger, pageName);
                 break;
         }
     }
+
+    [LoggerMessage(EventId = 1, Level = LogLevel.Warning, Message = "Unknown page requested: {PageName}")]
+    private static partial void LogUnknownPageRequested(ILogger logger, string? pageName);
 }

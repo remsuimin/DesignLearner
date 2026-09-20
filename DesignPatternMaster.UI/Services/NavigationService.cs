@@ -1,12 +1,12 @@
+using System.Windows.Controls;
 using DesignPatternMaster.UI.Views.Pages;
 using DesignPatternMaster.UseCases.Exceptions;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
-using System.Windows.Controls;
 
 namespace DesignPatternMaster.UI.Services;
 
-public sealed class NavigationService : INavigationService
+public sealed partial class NavigationService : INavigationService
 {
     private readonly IServiceProvider _services;
     private readonly ILogger<NavigationService> _logger;
@@ -42,7 +42,7 @@ public sealed class NavigationService : INavigationService
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Failed to navigate to dashboard.");
+            LogFailedToNavigateToDashboard(_logger, ex);
             _dialog.ShowError($"ダッシュボードの表示に失敗しました: {ex.Message}", "エラー");
         }
     }
@@ -57,7 +57,7 @@ public sealed class NavigationService : INavigationService
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Failed to navigate to settings.");
+            LogFailedToNavigateToSettings(_logger, ex);
             _dialog.ShowError($"設定画面の表示に失敗しました: {ex.Message}", "エラー");
         }
     }
@@ -73,13 +73,13 @@ public sealed class NavigationService : INavigationService
         }
         catch (PatternNotFoundException ex)
         {
-            _logger.LogWarning(ex, "Pattern not found: {PatternId}", patternId);
+            LogPatternNotFound(_logger, ex, patternId);
             _dialog.ShowError($"パターンが見つかりません: {patternId}", "エラー");
             await NavigateToDashboardAsync(cancellationToken);
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Failed to navigate to pattern detail: {PatternId}", patternId);
+            LogFailedToNavigateToPatternDetail(_logger, ex, patternId);
             _dialog.ShowError($"詳細画面の表示に失敗しました: {ex.Message}", "エラー");
         }
     }
@@ -94,4 +94,16 @@ public sealed class NavigationService : INavigationService
                 break;
         }
     }
+
+    [LoggerMessage(EventId = 1, Level = LogLevel.Error, Message = "Failed to navigate to dashboard.")]
+    private static partial void LogFailedToNavigateToDashboard(ILogger logger, Exception ex);
+
+    [LoggerMessage(EventId = 2, Level = LogLevel.Error, Message = "Failed to navigate to settings.")]
+    private static partial void LogFailedToNavigateToSettings(ILogger logger, Exception ex);
+
+    [LoggerMessage(EventId = 3, Level = LogLevel.Warning, Message = "Pattern not found: {PatternId}")]
+    private static partial void LogPatternNotFound(ILogger logger, Exception ex, string patternId);
+
+    [LoggerMessage(EventId = 4, Level = LogLevel.Error, Message = "Failed to navigate to pattern detail: {PatternId}")]
+    private static partial void LogFailedToNavigateToPatternDetail(ILogger logger, Exception ex, string patternId);
 }

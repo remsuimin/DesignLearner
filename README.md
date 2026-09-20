@@ -13,7 +13,7 @@ GoFのデザインパターンを中心に、現代的なC#の実装例と解説
 ## 技術スタック
 
 - **言語**: C#
-- **フレームワーク**: .NET 8
+- **フレームワーク**: .NET 10（`net10.0` / `net10.0-windows`）
 - **UI**: WPF (Windows Presentation Foundation)
 - **アーキテクチャ**: Onion Architecture
   - **Core**: ドメインエンティティ、インターフェース
@@ -21,12 +21,51 @@ GoFのデザインパターンを中心に、現代的なC#の実装例と解説
   - **Infrastructure**: データアクセス、外部サービス
   - **UI**: プレゼンテーション層 (MVVM)
 
+## 必須環境
+
+- Windows（WPF のため）
+- Visual Studio 2022 17.x 以降 または .NET 10 SDK（`global.json` 参照）
+
 ## 始め方
 
-1. リポジトリをクローンします。
-2. Visual Studio または適切なIDEで `DesignPatternMaster.sln` を開きます。
-3. ソリューションをビルドします。
-4. `DesignPatternMaster.UI` をスタートアッププロジェクトとして実行します。
+### 1. クローン
+
+```powershell
+git clone https://github.com/remsuimin/DesignLearner.git
+```
+
+### 2. ビルド・テスト・公開
+
+```powershell
+dotnet restore DesignPatternMaster.sln
+dotnet build DesignPatternMaster.sln --nologo
+dotnet test DesignPatternMaster.sln --nologo
+dotnet test DesignPatternMaster.sln --collect:"XPlat Code Coverage" --nologo
+dotnet publish DesignPatternMaster.UI/DesignPatternMaster.UI.csproj -c Release -r win-x64 --nologo
+```
+
+カバレッジは `TestResults/**/coverage.cobertura.xml` に出力されます。HTML レポートを生成する場合：
+
+```powershell
+dotnet tool install -g dotnet-reportgenerator-globaltool
+reportgenerator -reports:"TestResults/**/coverage.cobertura.xml" -targetdir:"coverage-report" -reporttypes:Html
+```
+
+（`coverage-report/` は `.gitignore` 対象のためコミットしません。）
+
+### 3. 実行
+
+Visual Studio または適切な IDE で `DesignPatternMaster.sln` を開き、`DesignPatternMaster.UI` をスタートアッププロジェクトとして実行します。
+
+## アセット
+
+- `DesignPatternMaster.UI/Assets/app_icon.png` — ウィンドウアイコン
+- `DesignPatternMaster.UI/Assets/splash_screen.png` — スプラッシュ画面
+
+## 開発メモ
+
+- `DesignPatternMaster.UI/Properties/launchSettings.json` は最小プロファイル（`commandName: Project`）のまま追跡しています。シークレットを記載しないでください。
+- 書式は `.editorconfig` に従います。変更ファイルのみ `dotnet format` を適用してください。
 
 ## ライセンス
 

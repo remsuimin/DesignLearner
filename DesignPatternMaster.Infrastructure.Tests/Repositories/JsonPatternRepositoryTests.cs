@@ -1,14 +1,16 @@
+using System.Text.Json;
 using DesignPatternMaster.Core.Entities;
 using DesignPatternMaster.Core.Enums;
 using DesignPatternMaster.Infrastructure.Repositories;
 using FluentAssertions;
-using System.Text.Json;
 using Xunit;
 
 namespace DesignPatternMaster.Infrastructure.Tests.Repositories
 {
     public class JsonPatternRepositoryTests : IDisposable
     {
+        private static readonly string[] s_expectedIds = { "singleton", "factory" };
+
         private readonly string _testFilePath;
         private readonly string _testDirectory;
 
@@ -25,6 +27,8 @@ namespace DesignPatternMaster.Infrastructure.Tests.Repositories
             {
                 Directory.Delete(_testDirectory, true);
             }
+
+            GC.SuppressFinalize(this);
         }
 
         [Fact]
@@ -60,7 +64,7 @@ namespace DesignPatternMaster.Infrastructure.Tests.Repositories
             // Assert
             result.Should().NotBeNull();
             result.Should().HaveCount(2);
-            result.Select(p => p.Id).Should().Contain(new[] { "singleton", "factory" });
+            result.Select(p => p.Id).Should().Contain(s_expectedIds);
         }
 
         [Fact]
@@ -155,10 +159,10 @@ namespace DesignPatternMaster.Infrastructure.Tests.Repositories
 
             // Act
             var result1 = await repository.GetAllPatternsAsync();
-            
+
             // Delete the file to verify caching
             File.Delete(_testFilePath);
-            
+
             var result2 = await repository.GetAllPatternsAsync();
 
             // Assert
@@ -199,7 +203,7 @@ namespace DesignPatternMaster.Infrastructure.Tests.Repositories
             var result = await repository.GetAllPatternsAsync();
 
             // Assert
-            var pattern = result.First();
+            var pattern = result[0];
             pattern.Sections.Should().HaveCount(1);
             pattern.Sections[0].CodeSample.Should().NotBeNull();
             pattern.Tags.Should().HaveCount(2);
@@ -317,7 +321,7 @@ namespace DesignPatternMaster.Infrastructure.Tests.Repositories
             var result = await repository.GetAllPatternsAsync();
 
             // Assert
-            var pattern = result.First();
+            var pattern = result[0];
             pattern.IconPath.Should().BeNull();
         }
 
@@ -399,7 +403,7 @@ namespace DesignPatternMaster.Infrastructure.Tests.Repositories
             foreach (var r in results)
             {
                 r.Should().HaveCount(1);
-                r.First().Id.Should().Be("singleton");
+                r[0].Id.Should().Be("singleton");
             }
         }
 

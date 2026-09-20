@@ -26,12 +26,18 @@ public sealed partial class PatternDetailViewModel : ObservableObject
         try
         {
             SelectedPattern = await _query.ExecuteAsync(id, cancellationToken);
-            _logger.LogInformation("Pattern loaded: {PatternId}", id);
+            LogPatternLoaded(_logger, id);
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Failed to load pattern: {PatternId}", id);
+            LogFailedToLoadPattern(_logger, ex, id);
             throw;
         }
     }
+
+    [LoggerMessage(EventId = 1, Level = LogLevel.Information, Message = "Pattern loaded: {PatternId}")]
+    private static partial void LogPatternLoaded(ILogger logger, string patternId);
+
+    [LoggerMessage(EventId = 2, Level = LogLevel.Error, Message = "Failed to load pattern: {PatternId}")]
+    private static partial void LogFailedToLoadPattern(ILogger logger, Exception ex, string patternId);
 }

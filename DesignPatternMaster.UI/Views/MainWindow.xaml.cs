@@ -1,7 +1,7 @@
+using System.Windows;
 using DesignPatternMaster.UI.Services;
 using DesignPatternMaster.UI.ViewModels;
 using Microsoft.Extensions.Logging;
-using System.Windows;
 
 namespace DesignPatternMaster.UI.Views;
 
@@ -41,7 +41,7 @@ public sealed partial class MainWindow : Window
         }
         catch (Exception ex)
         {
-            _logger.LogCritical(ex, "Failed to initialize MainWindow.");
+            LogFailedToInitializeMainWindow(_logger, ex);
             throw;
         }
     }
@@ -79,4 +79,7 @@ public sealed partial class MainWindow : Window
     {
         Close();
     }
+
+    [LoggerMessage(EventId = 1, Level = LogLevel.Critical, Message = "Failed to initialize MainWindow.")]
+    private static partial void LogFailedToInitializeMainWindow(ILogger logger, Exception ex);
 }

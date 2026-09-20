@@ -4,7 +4,7 @@ using Microsoft.Extensions.Logging;
 
 namespace DesignPatternMaster.UseCases.Queries;
 
-public sealed class GetPatternListQuery : IGetPatternListQuery
+public sealed partial class GetPatternListQuery : IGetPatternListQuery
 {
     private readonly IPatternRepository _repository;
     private readonly ILogger<GetPatternListQuery> _logger;
@@ -21,8 +21,11 @@ public sealed class GetPatternListQuery : IGetPatternListQuery
     {
         var patterns = await _repository.GetAllPatternsAsync(cancellationToken);
         if (patterns.Count == 0)
-            _logger.LogInformation("No design patterns found.");
+            LogNoPatternsFound(_logger);
 
         return patterns;
     }
+
+    [LoggerMessage(EventId = 1, Level = LogLevel.Information, Message = "No design patterns found.")]
+    private static partial void LogNoPatternsFound(ILogger logger);
 }

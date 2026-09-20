@@ -1,8 +1,8 @@
+using System.Reflection;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using DesignPatternMaster.UI.Services;
 using Microsoft.Extensions.Logging;
-using System.Reflection;
 
 namespace DesignPatternMaster.UI.ViewModels;
 
@@ -39,7 +39,7 @@ public sealed partial class SettingsViewModel : ObservableObject
     [RelayCommand]
     private void ResetData()
     {
-        _logger.LogInformation("Reset data requested.");
+        LogResetDataRequested(_logger);
         _dialog.ShowInformation("データのリセット機能は今後実装予定です。", "情報");
     }
 
@@ -49,7 +49,13 @@ public sealed partial class SettingsViewModel : ObservableObject
         if (_launcher.TryOpenUrl(_launcher.RepositoryUrl))
             return;
 
-        _logger.LogWarning("Failed to open URL: {Url}", _launcher.RepositoryUrl);
+        LogFailedToOpenUrl(_logger, _launcher.RepositoryUrl);
         _dialog.ShowError("ブラウザを開けませんでした。", "エラー");
     }
+
+    [LoggerMessage(EventId = 1, Level = LogLevel.Information, Message = "Reset data requested.")]
+    private static partial void LogResetDataRequested(ILogger logger);
+
+    [LoggerMessage(EventId = 2, Level = LogLevel.Warning, Message = "Failed to open URL: {Url}")]
+    private static partial void LogFailedToOpenUrl(ILogger logger, string url);
 }

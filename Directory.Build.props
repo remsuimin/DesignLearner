@@ -3,9 +3,15 @@
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
     <LangVersion>latest</LangVersion>
-    <TreatWarningsAsErrors>false</TreatWarningsAsErrors>
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
     <AnalysisMode>Recommended</AnalysisMode>
     <EnforceCodeStyleInBuild>true</EnforceCodeStyleInBuild>
     <ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
+  </PropertyGroup>
+  <!-- Test methods intentionally use the Method_Scenario_Expected naming
+       convention, which conflicts with CA1707. Suppress it for test
+       projects only (renaming 50+ tests would destroy readability). -->
+  <PropertyGroup Condition="$(MSBuildProjectName.Contains('.Tests'))">
+    <NoWarn>$(NoWarn);CA1707</NoWarn>
   </PropertyGroup>
 </Project>

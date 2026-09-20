@@ -12,6 +12,8 @@ namespace DesignPatternMaster.UI.Tests.ViewModels
 {
     public class DashboardViewModelTests
     {
+        private static readonly string[] s_expectedIds = { "singleton", "factory" };
+
         [Fact]
         public async Task LoadDataAsync_ShouldPopulateEmpty_WhenNoPatterns()
         {
@@ -41,7 +43,7 @@ namespace DesignPatternMaster.UI.Tests.ViewModels
             await vm.LoadDataAsync();
 
             vm.Patterns.Should().HaveCount(2);
-            vm.Patterns.Select(p => p.Id).Should().Contain(new[] { "singleton", "factory" });
+            vm.Patterns.Select(p => p.Id).Should().Contain(s_expectedIds);
         }
 
         [Fact]

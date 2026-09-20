@@ -1,4 +1,5 @@
-﻿using DesignPatternMaster.Core.Interfaces;
+using System.Windows;
+using DesignPatternMaster.Core.Interfaces;
 using DesignPatternMaster.Infrastructure.Repositories;
 using DesignPatternMaster.UI.Services;
 using DesignPatternMaster.UI.ViewModels;
@@ -6,7 +7,6 @@ using DesignPatternMaster.UI.Views.Pages;
 using DesignPatternMaster.UseCases.Queries;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
-using System.Windows;
 
 namespace DesignPatternMaster.UI;
 
@@ -45,7 +45,7 @@ public partial class App : Application
             _services = services.BuildServiceProvider();
 #endif
             var logger = _services.GetRequiredService<ILogger<App>>();
-            logger.LogInformation("Service provider built.");
+            LogServiceProviderBuilt(logger);
 
             await Task.Delay(SplashScreenDurationMs);
             splashScreen.Close();
@@ -58,7 +58,7 @@ public partial class App : Application
             ShutdownMode = ShutdownMode.OnMainWindowClose;
 
             mainWindow.Show();
-            logger.LogInformation("MainWindow shown.");
+            LogMainWindowShown(logger);
         }
         catch (Exception ex)
         {
@@ -131,4 +131,10 @@ public partial class App : Application
         (_services as IDisposable)?.Dispose();
         base.OnExit(e);
     }
+
+    [LoggerMessage(EventId = 1, Level = LogLevel.Information, Message = "Service provider built.")]
+    private static partial void LogServiceProviderBuilt(ILogger logger);
+
+    [LoggerMessage(EventId = 2, Level = LogLevel.Information, Message = "MainWindow shown.")]
+    private static partial void LogMainWindowShown(ILogger logger);
 }

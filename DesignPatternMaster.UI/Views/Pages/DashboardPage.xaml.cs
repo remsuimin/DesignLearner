@@ -1,5 +1,5 @@
-using DesignPatternMaster.UI.ViewModels;
 using System.Windows.Controls;
+using DesignPatternMaster.UI.ViewModels;
 
 namespace DesignPatternMaster.UI.Views.Pages
 {
@@ -12,7 +12,7 @@ namespace DesignPatternMaster.UI.Views.Pages
             ViewModel = viewModel;
             DataContext = viewModel;  // Fixed: bind to ViewModel
             InitializeComponent();
-            
+
             // Data is loaded by INavigationService when the DashboardPage is navigated to.
         }
     }

@@ -9,6 +9,7 @@
     <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" />
   </ItemGroup>
 
+  <!-- Data/patterns.json は None Update のまま維持する。Content 化は SDK 既定 None との重複登録（NETSDK1022）の恐れがあるため見送る。出力転送は CopyToOutputDirectory=PreserveNewest で実測確認済み。 -->
   <ItemGroup>
     <None Update="Data\**\*">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>

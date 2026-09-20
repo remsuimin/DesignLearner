@@ -12,6 +12,6 @@
     <PackageVersion Include="Microsoft.Extensions.Logging" Version="10.0.0" />
     <PackageVersion Include="Microsoft.Extensions.Logging.Abstractions" Version="10.0.0" />
     <PackageVersion Include="Microsoft.Extensions.Logging.Debug" Version="10.0.0" />
-    <PackageVersion Include="Xunit.StaFact" Version="1.1.11" />
+    <PackageVersion Include="Xunit.StaFact" Version="4.0.23" />
   </ItemGroup>
 </Project>
